@@ -1,3 +1,447 @@
+Deep Research Task Solution
+
+Overview
+
+This system provides a real-time daily briefing for Canadian federal policymakers by fetching and summarizing data from multiple government sources. It is structured as an MCP server (using the FastMCP framework) with various tools that can be invoked by an LLM (Claude Sonnet 4.5) through a chat interface. The code is organized into modules for fetching data (fetchers/), background tasks and caching (tasks/), prompt templates for personas (prompt_templates/), configuration (config.py), and the MCP server (mcp_server.py). Below is the complete implementation.
+
+⸻
+
+Module: config.py
+
+# config.py
+
+from typing import Final
+
+# URLs and configuration constants for data sources
+class Config:
+    # Government of Canada RSS feeds (Prime Minister's site)
+    PM_NEWS_RSS: Final[str] = "https://pm.gc.ca/en/news.rss"
+    PM_MEDIA_RSS: Final[str] = "https://pm.gc.ca/en/media.rss"
+
+    # Statistics Canada RSS (all subjects)
+    STATCAN_ALL_RSS: Final[str] = "https://www150.statcan.gc.ca/n1/rss/dai-quo/0-eng.atom"
+    
+    # Canada News Centre (National news Atom feed)
+    CANADA_NEWS_ATOM: Final[str] = (
+        "https://api.io.canada.ca/io-server/gc/news/en/v2"
+        "?sort=publishedDate&orderBy=desc&pick=5&format=atom&atomtitle=National%20News"
+    )
+    
+    # House of Commons Hansard base URL (for constructing URLs)
+    OURCOMMONS_BASE: Final[str] = "https://www.ourcommons.ca/Content/House"
+    
+    # GEDS directory API (placeholder dataset on Open Data Portal)
+    GEDS_API_URL: Final[str] = (
+        "https://open.canada.ca/data/api/3/action/datastore_search?resource_id="
+        "8ec4a9df-b76b-4a67-8f93-cdbc2e040098"
+    )
+
+
+⸻
+
+Module: fetchers/rss_util.py
+
+# fetchers/rss_util.py
+
+import asyncio
+import aiohttp
+import xml.etree.ElementTree as ET
+from typing import Any, Dict, List
+
+async def fetch_feed(url: str) -> List[Dict[str, Any]]:
+    """
+    Fetches and parses an RSS/Atom feed from the given URL.
+    Returns a list of entries with keys: 'title', 'link', 'published', 'summary'.
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    # Handle non-200 responses gracefully
+                    return [{"error": f"Failed to fetch feed: HTTP {response.status}"}]
+                text = await response.text()
+    except Exception as e:
+        return [{"error": f"Exception during fetch: {e}"}]
+
+    try:
+        # Parse the XML feed
+        root = ET.fromstring(text)
+        entries = []
+        # Handle both RSS and Atom feeds
+        # RSS: items under channel/item
+        # Atom: entries under feed/entry
+        channel = root.find('channel')
+        if channel is not None:
+            items = channel.findall('item')
+        else:
+            # Atom feed
+            items = root.findall('{http://www.w3.org/2005/Atom}entry')
+        for item in items:
+            title = item.findtext('title') or item.findtext('{http://www.w3.org/2005/Atom}title', default='')
+            link = (item.findtext('link') or '').strip()
+            # In Atom, link may be an element with href
+            if not link:
+                link_elem = item.find('{http://www.w3.org/2005/Atom}link')
+                link = link_elem.get('href') if link_elem is not None else ''
+            published = (
+                item.findtext('pubDate')
+                or item.findtext('{http://www.w3.org/2005/Atom}updated')
+                or item.findtext('{http://www.w3.org/2005/Atom}published')
+                or ''
+            )
+            summary = item.findtext('description') or item.findtext('{http://www.w3.org/2005/Atom}summary', default='')
+            entries.append({
+                'title': title.strip(),
+                'link': link,
+                'published': published.strip(),
+                'summary': summary.strip()
+            })
+        return entries
+    except ET.ParseError as e:
+        return [{"error": f"Failed to parse XML: {e}"}]
+    except Exception as e:
+        return [{"error": f"Unexpected parsing error: {e}"}]
+
+
+⸻
+
+Module: fetchers/pm_fetcher.py
+
+# fetchers/pm_fetcher.py
+
+from typing import List, Dict, Any
+from .rss_util import fetch_feed
+from config import Config
+
+async def fetch_pm_news() -> List[Dict[str, Any]]:
+    """
+    Fetches the latest Prime Minister's news releases via RSS.
+    """
+    try:
+        entries = await fetch_feed(Config.PM_NEWS_RSS)
+        return entries
+    except Exception as e:
+        return [{"error": f"Error fetching PM news: {e}"}]
+
+async def fetch_pm_media() -> List[Dict[str, Any]]:
+    """
+    Fetches the latest Prime Minister's media releases via RSS.
+    """
+    try:
+        entries = await fetch_feed(Config.PM_MEDIA_RSS)
+        return entries
+    except Exception as e:
+        return [{"error": f"Error fetching PM media: {e}"}]
+
+
+⸻
+
+Module: fetchers/statcan_fetcher.py
+
+# fetchers/statcan_fetcher.py
+
+from typing import List, Dict, Any
+from .rss_util import fetch_feed
+from config import Config
+
+async def fetch_statscan_all() -> List[Dict[str, Any]]:
+    """
+    Fetches the latest Statistics Canada releases (all subjects) via RSS.
+    """
+    try:
+        entries = await fetch_feed(Config.STATCAN_ALL_RSS)
+        return entries
+    except Exception as e:
+        return [{"error": f"Error fetching StatCan data: {e}"}]
+
+
+⸻
+
+Module: fetchers/canada_news_fetcher.py
+
+# fetchers/canada_news_fetcher.py
+
+from typing import List, Dict, Any
+from .rss_util import fetch_feed
+from config import Config
+
+async def fetch_canada_news() -> List[Dict[str, Any]]:
+    """
+    Fetches the latest national news from the Canada News Centre (Atom feed).
+    """
+    try:
+        entries = await fetch_feed(Config.CANADA_NEWS_ATOM)
+        return entries
+    except Exception as e:
+        return [{"error": f"Error fetching Canada News data: {e}"}]
+
+
+⸻
+
+Module: fetchers/geds_fetcher.py
+
+# fetchers/geds_fetcher.py
+
+from typing import Dict, Any
+import aiohttp
+import asyncio
+from config import Config
+
+async def fetch_geds_directory() -> Dict[str, Any]:
+    """
+    Placeholder for fetching Government Electronic Directory Service data.
+    Currently retrieves a small sample from an open dataset (if accessible).
+    """
+    url = Config.GEDS_API_URL
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    return {"error": f"GEDS API returned status {response.status}"}
+                data = await response.json()
+                # Return first record as example
+                result = {"sample_records": data.get("result", {}).get("records", [])[:5]}
+                return result
+    except Exception as e:
+        return {"error": f"Exception fetching GEDS data: {e}"}
+
+
+⸻
+
+Module: tasks/cache.py
+
+# tasks/cache.py
+
+import asyncio
+from datetime import datetime, timedelta
+from typing import Any, Awaitable, Callable, Dict
+
+# Simple in-memory cache
+_cache_data: Dict[str, Any] = {}
+_cache_expiry: Dict[str, datetime] = {}
+CACHE_TTL_SECONDS = 600  # Cache Time-To-Live (10 minutes)
+
+async def fetch_with_cache(key: str, fetch_coro: Callable[[], Awaitable[Any]]) -> Any:
+    """
+    Fetch data using the provided coroutine, with simple caching.
+    If cached data is fresh (not expired), return it instead of calling the coroutine.
+    """
+    now = datetime.now()
+    if key in _cache_data and now < _cache_expiry.get(key, now):
+        return _cache_data[key]
+    result = await fetch_coro()
+    _cache_data[key] = result
+    _cache_expiry[key] = now + timedelta(seconds=CACHE_TTL_SECONDS)
+    return result
+
+
+⸻
+
+Module: prompt_templates/personas.txt
+
+# Persona: Prime Minister
+You are the Prime Minister of Canada. Provide a concise daily briefing of key national developments, government announcements, and important statistics. Summarize factual information without giving policy recommendations. Focus on information relevant to the national agenda.
+
+# Persona: Finance Minister
+You are the Minister of Finance of Canada. Provide a concise daily briefing that emphasizes economic data, fiscal updates, budgetary news, and relevant statistics. Summarize factual information without policy recommendations, focusing on economic and financial implications.
+
+# Persona: Opposition Leader
+You are the Leader of the Opposition in Canada. Provide a concise daily briefing highlighting government actions and announcements, potential impacts, and critical context. Summarize factual information objectively without offering policy advice or partisan commentary.
+
+
+⸻
+
+Module: mcp_server.py
+
+# mcp_server.py
+
+from typing import List, Dict, Any
+from fastmcp import FastMCP
+import asyncio
+
+from fetchers.pm_fetcher import fetch_pm_news, fetch_pm_media
+from fetchers.statcan_fetcher import fetch_statscan_all
+from fetchers.canada_news_fetcher import fetch_canada_news
+from fetchers.geds_fetcher import fetch_geds_directory
+from tasks.cache import fetch_with_cache
+
+# Initialize FastMCP server
+mcp = FastMCP("DailyBriefSystem")
+
+@mcp.tool
+async def get_pm_news() -> List[Dict[str, Any]]:
+    """
+    Tool: Fetch latest Prime Minister press releases.
+    Returns a list of news items with title, link, published date, and summary.
+    """
+    data = await fetch_with_cache("pm_news", fetch_pm_news)
+    return data
+
+@mcp.tool
+async def get_pm_media() -> List[Dict[str, Any]]:
+    """
+    Tool: Fetch latest Prime Minister media releases.
+    """
+    data = await fetch_with_cache("pm_media", fetch_pm_media)
+    return data
+
+@mcp.tool
+async def get_statscan_updates() -> List[Dict[str, Any]]:
+    """
+    Tool: Fetch latest Statistics Canada updates (all subjects).
+    """
+    data = await fetch_with_cache("statscan", fetch_statscan_all)
+    return data
+
+@mcp.tool
+async def get_canada_news() -> List[Dict[str, Any]]:
+    """
+    Tool: Fetch latest national news from Canada News Centre.
+    """
+    data = await fetch_with_cache("canada_news", fetch_canada_news)
+    return data
+
+@mcp.tool
+async def get_geds_data() -> Dict[str, Any]:
+    """
+    Tool: Fetch Government Electronic Directory Service (GEDS) metadata sample.
+    """
+    data = await fetch_with_cache("geds", fetch_geds_directory)
+    return data
+
+# Example Hansard tool stub (not fully implemented)
+@mcp.tool
+async def get_latest_hansard() -> List[Dict[str, Any]]:
+    """
+    Tool: Fetch latest Hansard (parliamentary debates) entries.
+    Note: Full implementation requires complex parsing of the House of Commons data.
+    """
+    # Placeholder response; proper implementation would fetch XML from ourcommons.ca
+    return [{"notice": "Hansard transcripts retrieval not implemented in this version."}]
+
+if __name__ == "__main__":
+    # Run the MCP server (default on localhost:  port 8000)
+    mcp.run()
+
+
+⸻
+
+README.md
+
+# Real-Time Daily Brief System (Canada)
+
+This project implements a **real-time daily briefing system** for Canadian federal policymakers. It uses the FastMCP framework to expose tools that fetch and summarize data from government sources. The LLM (Claude Sonnet 4.5) can call these tools through an MCP interface to retrieve up-to-date information.
+
+## Features
+
+- **Data Sources**: 
+  - Government of Canada RSS feeds (Prime Minister's press releases and media advisories).
+  - Statistics Canada RSS (all subject categories).
+  - Canada News Centre (national news Atom feed).
+  - (Stub) Hansard transcripts from the House of Commons (parliamentary debates).
+  - GEDS (Government Electronic Directory Service) sample data.
+- **Tools**: Each data source has a corresponding tool that returns structured JSON.
+- **Caching**: Asynchronous tasks with a simple cache to avoid frequent repeated fetches.
+- **Personas**: Prompt templates for role-based briefings (e.g., Prime Minister, Finance Minister, Opposition Leader).
+- **MCP Server**: FastMCP server (`mcp_server.py`) exposing the tools.
+
+## Project Structure
+
+- `config.py`: Configuration and source URLs for data feeds.
+- `fetchers/`: Modules to fetch and parse specific feeds (RSS, Atom, JSON).
+  - `rss_util.py`: Generic RSS/Atom fetcher and parser.
+  - `pm_fetcher.py`: Fetcher for Prime Minister news.
+  - `statscan_fetcher.py`: Fetcher for Statistics Canada.
+  - `canada_news_fetcher.py`: Fetcher for Canada News Centre.
+  - `geds_fetcher.py`: Stub for GEDS directory data.
+- `tasks/cache.py`: Asynchronous fetch with simple in-memory caching.
+- `mcp_server.py`: FastMCP server exposing the tools (`@mcp.tool`).
+- `prompt_templates/`: Persona prompt templates for the LLM (role-based briefing).
+- `README.md`: Usage instructions and examples.
+
+## Installation
+
+1. **Clone the repository** (if in a separate environment):
+   ```bash
+   git clone https://github.com/yourusername/daily-brief-system.git
+   cd daily-brief-system
+
+	2.	Set up Python environment (requires Python 3.13+):
+
+python3 -m venv venv
+source venv/bin/activate
+
+
+	3.	Install dependencies:
+
+pip install fastmcp aiohttp
+
+	•	fastmcp: MCP server framework.
+	•	aiohttp: For async HTTP requests.
+	•	(Optional) feedparser if you want richer RSS parsing (the code uses ElementTree by default).
+
+Usage
+	1.	Run the MCP server:
+
+python mcp_server.py
+
+By default, the FastMCP server listens on http://localhost:8000.
+
+	2.	Using the tools via an LLM:
+	•	The LLM can call the exposed tools. For example, using FastMCP’s client:
+
+import asyncio
+from fastmcp import Client
+
+async def main():
+    async with Client("http://localhost:8000") as client:
+        pm_news = await client.call_tool(name="get_pm_news", arguments={})
+        print("PM News:", pm_news)
+
+        stats_updates = await client.call_tool(name="get_statscan_updates", arguments={})
+        print("StatsCan:", stats_updates)
+
+asyncio.run(main())
+
+
+	•	The tools return JSON-serializable structures (lists of dicts or dicts) containing the fetched data.
+
+	3.	Persona prompts:
+	•	Use the templates in prompt_templates/personas.txt to structure the LLM query depending on role. For example:
+You are the Prime Minister of Canada. Provide a concise daily briefing of key national developments, government announcements, and important statistics…
+
+Example Output
+	•	get_pm_news might return:
+
+[
+  {"title": "Prime Minister announces new initiative", "link": "https://pm.gc.ca/en/news/...", "published": "2025-10-25T12:00:00-04:00", "summary": "Summary of the press release..."},
+  ...
+]
+
+
+	•	get_statscan_updates might return:
+
+[
+  {"title": "Retail Sales Increase in August", "link": "https://www150.statcan.gc.ca/...", "published": "2025-10-24TXX:XX:XX-XX:XX", "summary": "Retail sales rose by X% in August..."},
+  ...
+]
+
+
+	•	get_latest_hansard (stub) returns a notice that it’s not implemented in this version.
+
+Error Handling
+	•	The code includes try/except blocks to catch HTTP or parsing errors. Tools return error messages in the JSON if something goes wrong, e.g.:
+
+[{"error": "Failed to fetch feed: HTTP 404"}]
+
+
+
+Notes
+	•	Authentication: Not required, as all data sources are public.
+	•	Policy Recommendations: The system only provides summaries of information. Any policy analysis or recommendations should be done by the LLM using the raw data.
+	•	Updates: The system fetches in real time when tools are called, with light caching to reduce load on APIs.
+	•	Extensibility: Additional feeds (e.g. CBC News RSS) or specific Statistics Canada APIs can be added by writing new fetcher functions in the fetchers/ directory and exposing them via tools in mcp_server.py.
+
 Excellent. I’ll now generate the full working code for a real-time policy brief agent using Python 3.13+, Claude Sonnet 4.5 via OpenAI SDK, and FastMCP. It will:
 
 * Run locally on Linux
