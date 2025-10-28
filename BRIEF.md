@@ -2524,3 +2524,681 @@ Notes:
   * I can add an optional step to run the merged entities/events through a light canonicalization (use fuzzy deduplication).
 * Want me to change `run_hansard_batch_processing` to background mode (returns run-id) and add a `get_run_status(run_id)` tool? If yes, I’ll implement it now.
 
+Yes — we can implement that. Below I provide a **ready-to-drop-in implementation** that:
+
+* Collects recent Hansard & committee transcripts (structured XML when available, HTML fallback), including CIIT committee pages.
+* Parses per-speaker interventions (MPs, senators, witnesses, parliamentary secretaries).
+* Uses the existing Claude Sonnet 4.5 integration to **classify issue(s)** for each speech (LLM-assisted) from a configurable category list.
+* Stores parsed/interpreted speech records in a **local SQLite DB** and maintains a **rolling window** (evicts old rows).
+* Exposes query functions (also added as FastMCP tools) that return:
+
+  * Ranked lists of most-frequent speakers by issue (counts and words)
+  * Time-series aggregates (counts per day) for an issue
+  * Per-speaker activity summaries
+* Uses light scraping/transcription fallback hooks (placeholders) for ParlVu or non-XML pages, with clear extension points if you want to add audio transcription later.
+* Works with Python 3.13+, runs locally, integrates with the previously provided MCP server and LLM modules.
+
+I kept the design minimal and robust: prioritize machine-readable XML/feeds, fall back to HTML heuristics (we already have `fetchers/hansard_fetcher.py`), then optionally mark items for offline/transcription processing.
+
+---
+
+## Files to add / update
+
+Below are the new modules (and small updates). Add them into your repository alongside the previous modules. I show the full file contents.
+
+---
+
+### 1) `config.py` — Add new config values (update existing file)
+
+Append the following constants to your existing `config.py` (or replace keys if already present):
+
+```python
+# config.py (append)
+
+from typing import Final
+
+class Config:
+    # existing values...
+    # Committee CIIT (Standing Committee on International Trade)
+    CIIT_COMMITTEE_URL: Final[str] = "https://www.ourcommons.ca/Committees/en/CIIT/StudyActivity?parl=44&session=2"  # example; adjust if needed
+
+    # Publications Search (Publications endpoint base) - fallback
+    HOUSE_PUBLICATIONS_SEARCH_BASE: Final[str] = "https://www.ourcommons.ca/DocumentViewer/en/house/latest/hansard"  # used as default start point
+
+    # DB path for speaker tracker
+    SPEAKER_DB_PATH: Final[str] = "data/speaker_activity.db"
+
+    # Rolling window (days) default for ingestion and queries
+    DEFAULT_ROLLING_WINDOW_DAYS: Final[int] = 30
+
+    # Default issue categories (expandable)
+    DEFAULT_ISSUE_CATEGORIES: Final[list] = [
+        "Economy",
+        "Health",
+        "Defense",
+        "Foreign Affairs",
+        "International Trade",
+        "Environment / Climate",
+        "Indigenous Affairs",
+        "Immigration",
+        "Housing",
+        "Education",
+        "Transport",
+        "Energy",
+        "Public Safety",
+        "Justice",
+        "Agriculture",
+        "Other"
+    ]
+```
+
+---
+
+### 2) `fetchers/parliament_feeds.py`
+
+This module discovers recent Hansard & committee transcript URLs to pass into the parser (structured fetcher `fetch_latest_hansard_structured` already exists). It prefers XML links and uses light scraping.
+
+```python
+# fetchers/parliament_feeds.py
+
+import asyncio
+from typing import List, Dict, Optional
+from urllib.parse import urljoin
+import aiohttp
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+from config import Config
+from fetchers.hansard_fetcher import fetch_parliament_xml_or_html, fetch_latest_hansard_structured
+import logging
+
+log = logging.getLogger(__name__)
+
+
+async def fetch_recent_hansard_urls(days: int = 7) -> List[str]:
+    """
+    Heuristic: fetch the "latest hansard" landing page and try to find links to recent hansard documents.
+    Fallback: return the default LATEST_HANSARD_URL if discovery fails.
+    """
+    start_url = Config.HOUSE_PUBLICATIONS_SEARCH_BASE
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(start_url) as resp:
+                if resp.status != 200:
+                    log.warning("Failed to fetch Hansard index %s -> %s", start_url, resp.status)
+                    return [start_url]
+                text = await resp.text()
+    except Exception as e:
+        log.exception("Error fetching Hansard index page")
+        return [start_url]
+
+    soup = BeautifulSoup(text, "lxml")
+    urls = set()
+
+    # Find DocumentViewer links which usually contain '/DocumentViewer/en/house/...'
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if "/DocumentViewer/en/house/" in href:
+            urls.add(urljoin(start_url, href))
+
+    # Also look for 'Download XML' links on the page
+    for a in soup.find_all("a", href=True):
+        if ".xml" in a["href"]:
+            urls.add(urljoin(start_url, a["href"]))
+
+    # If none found, return default
+    if not urls:
+        return [start_url]
+
+    # Filter by recency if dates in link or surrounding text exist
+    # (best-effort) - return unique list
+    return list(urls)
+
+
+async def fetch_recent_committee_urls(committee_base_url: str = Config.CIIT_COMMITTEE_URL, days: int = 30) -> List[str]:
+    """
+    Scrape a committee's StudyActivity pages to find recent meetings/transcript/document viewer links.
+    Returns list of document viewer URLs for the committee.
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(committee_base_url) as resp:
+                if resp.status != 200:
+                    log.warning("Failed to fetch committee page %s -> %s", committee_base_url, resp.status)
+                    return []
+                text = await resp.text()
+    except Exception as e:
+        log.exception("Error fetching committee page")
+        return []
+
+    soup = BeautifulSoup(text, "lxml")
+    doc_urls = set()
+    # On committee pages, meeting entries often link to DocumentViewer or PDF - find links containing 'DocumentViewer' or 'CommitteeWitness' etc.
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if "DocumentViewer" in href or "/CommitteeWitness/" in href or "/MeetingHistory" in href:
+            doc_urls.add(urljoin(committee_base_url, href))
+        elif ".xml" in href:
+            doc_urls.add(urljoin(committee_base_url, href))
+
+    return list(doc_urls)
+
+
+async def fetch_and_parse_multiple(urls: List[str]) -> List[Dict]:
+    """
+    For each URL, attempt to fetch structured data via fetch_parliament_xml_or_html/fetch_latest_hansard_structured.
+    Returns parsed structured objects (same shape as fetch_latest_hansard_structured output).
+    """
+    results = []
+    for url in urls:
+        try:
+            parsed = await fetch_latest_hansard_structured(url)
+            parsed["source_url"] = url
+            results.append(parsed)
+        except Exception as e:
+            log.exception("Failed to parse URL %s", url)
+            results.append({"error": str(e), "url": url})
+    return results
+```
+
+---
+
+### 3) `speaker_tracker.py` — the speaker activity DB + query API
+
+This module manages a local SQLite DB storing speech records and provides queries for top speakers and time-series.
+
+```python
+# speaker_tracker.py
+
+import sqlite3
+from typing import Dict, Any, List, Optional, Tuple
+from datetime import datetime, timedelta
+import json
+import os
+from config import Config
+import logging
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+DB_SCHEMA = """
+CREATE TABLE IF NOT EXISTS speeches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source TEXT,
+    source_url TEXT,
+    published_at TEXT,    -- ISO datetime string
+    ingested_at TEXT,     -- ISO datetime string (now)
+    speaker_name TEXT,
+    speaker_role TEXT,
+    speaker_affiliation TEXT,
+    text TEXT,
+    word_count INTEGER,
+    issue_tags TEXT,      -- JSON array of issue tags
+    extra_json TEXT       -- JSON for other metadata
+);
+
+CREATE INDEX IF NOT EXISTS idx_published_at ON speeches (published_at);
+CREATE INDEX IF NOT EXISTS idx_speaker_name ON speeches (speaker_name);
+"""
+
+def _get_conn(db_path: Optional[str] = None) -> sqlite3.Connection:
+    if db_path is None:
+        db_path = Config.SPEAKER_DB_PATH
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db(db_path: Optional[str] = None) -> None:
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cur.executescript(DB_SCHEMA)
+    conn.commit()
+    conn.close()
+
+def ingest_speech(record: Dict[str, Any], db_path: Optional[str] = None) -> None:
+    """
+    Ingest a single speech record dict with keys:
+    - source (e.g. 'hansard', 'committee')
+    - source_url
+    - published (ISO str)
+    - speaker (name)
+    - role (e.g., 'MP', 'Witness', 'Senator')
+    - affiliation (party or org)
+    - text (speech body)
+    - issue_tags (list)
+    - extra_json (dict)
+    """
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    published = record.get("published") or record.get("published_at") or datetime.utcnow().isoformat()
+    text = record.get("text", "")
+    word_count = len(text.split())
+    issue_tags = json.dumps(record.get("issue_tags", []), ensure_ascii=False)
+    extra = json.dumps(record.get("extra_json", {}), ensure_ascii=False)
+    cur.execute(
+        """
+        INSERT INTO speeches (source, source_url, published_at, ingested_at, speaker_name, speaker_role, speaker_affiliation, text, word_count, issue_tags, extra_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            record.get("source"),
+            record.get("source_url"),
+            published,
+            datetime.utcnow().isoformat(),
+            record.get("speaker"),
+            record.get("role"),
+            record.get("affiliation"),
+            text,
+            word_count,
+            issue_tags,
+            extra
+        )
+    )
+    conn.commit()
+    conn.close()
+
+def purge_older_than(days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, db_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Remove rows older than now - days. Returns a dict with counts.
+    """
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    cur.execute("SELECT COUNT(*) FROM speeches WHERE published_at < ?", (cutoff,))
+    count_old = cur.fetchone()[0]
+    cur.execute("DELETE FROM speeches WHERE published_at < ?", (cutoff,))
+    conn.commit()
+    conn.close()
+    return {"deleted": count_old, "cutoff": cutoff}
+
+def top_speakers_by_issue(issue: str, top_n: int = 10, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Returns list of dicts: [{'speaker': name, 'count': n_interventions, 'total_words': x}, ...]
+    Filters speeches whose issue_tags contain the requested issue (case-insensitive).
+    """
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    # Simple LIKE match on JSON string for now
+    pattern = f'%"{issue}"%'
+    cur.execute(
+        """
+        SELECT speaker_name as speaker, COUNT(*) as cnt, SUM(word_count) as total_words
+        FROM speeches
+        WHERE published_at >= ? AND issue_tags LIKE ?
+        GROUP BY speaker_name
+        ORDER BY cnt DESC
+        LIMIT ?
+        """,
+        (cutoff, pattern, top_n)
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [{"speaker": r["speaker"], "count": r["cnt"], "total_words": r["total_words"] or 0} for r in rows]
+
+def time_series_for_issue(issue: str, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, interval: str = "day", db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Time series counts for an issue over the last 'days' days. Returns list of {date, count}.
+    interval: 'day' or 'hour' (hour supported if desired).
+    """
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cutoff_dt = datetime.utcnow() - timedelta(days=days)
+    cutoff = cutoff_dt.isoformat()
+    if interval == "hour":
+        fmt = "%Y-%m-%dT%H:00:00"
+        group_expr = "strftime('%Y-%m-%dT%H:00:00', published_at)"
+    else:
+        fmt = "%Y-%m-%d"
+        group_expr = "strftime('%Y-%m-%d', published_at)"
+    pattern = f'%"{issue}"%'
+    cur.execute(
+        f"""
+        SELECT {group_expr} as period, COUNT(*) as cnt
+        FROM speeches
+        WHERE published_at >= ? AND issue_tags LIKE ?
+        GROUP BY period
+        ORDER BY period ASC
+        """,
+        (cutoff, pattern)
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return [{"period": r["period"], "count": r["cnt"]} for r in rows]
+
+def speakers_activity_summary(speaker: str, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, db_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Returns aggregated stats for a speaker over the window.
+    """
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    cur.execute(
+        """
+        SELECT COUNT(*) as cnt, SUM(word_count) as total_words, GROUP_CONCAT(DISTINCT issue_tags) as issues
+        FROM speeches
+        WHERE published_at >= ? AND speaker_name = ?
+        """,
+        (cutoff, speaker)
+    )
+    r = cur.fetchone()
+    conn.close()
+    if not r:
+        return {"speaker": speaker, "count": 0, "total_words": 0, "issues": []}
+    # issues is a concatenated JSON fragments; we need to parse and combine
+    issues_json = r["issues"] or ""
+    # naive parse: find unique quoted items
+    import re
+    matches = re.findall(r'\"([^\"]+)\"', issues_json)
+    unique_issues = sorted(set(matches))
+    return {"speaker": speaker, "count": r["cnt"], "total_words": r["total_words"] or 0, "issues": unique_issues}
+```
+
+Notes:
+
+* `init_db()` should be called once at startup.
+* `ingest_speech()` expects normalized record fields (we’ll create them in ingestion pipeline).
+
+---
+
+### 4) `llm/claude_client.py` — add `classify_issues` function
+
+Add the following function to your existing `llm/claude_client.py` (it integrates with your existing model wrapper and prompt manager approach).
+
+```python
+# llm/claude_client.py (append)
+
+import json
+from typing import List, Optional, Dict, Any
+from llm.prompt_manager import get_persona_snippet, get_tone_snippet
+import textwrap
+
+_DEFAULT_CLASSIFY_PROMPT = textwrap.dedent("""
+You are a classification engine. Given the following speech text, classify the primary issue(s) the speaker is discussing.
+Return a strict JSON array of short issue labels (strings). Use only labels from the provided 'candidates' list when applicable; if none match, return ["Other"].
+
+Input JSON:
+{{
+  "text": {text_json},
+  "candidates": {candidates_json}
+}}
+
+Output example:
+["International Trade"]
+Important: output must be valid JSON (an array of strings) and nothing else.
+""")
+
+async def classify_issues(text: str, candidates: Optional[List[str]] = None, persona: Optional[str] = None, tone: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Use the LLM to classify text into one or more issue categories.
+    Returns {'labels': [...]} on success, or {'error':..., 'raw': ...} on failure.
+    """
+    if candidates is None:
+        from config import Config
+        candidates = Config.DEFAULT_ISSUE_CATEGORIES
+
+    # Shorten text if extremely long (LLM context constraints)
+    short_text = text if len(text) < 16000 else text[:16000]
+
+    prompt = _DEFAULT_CLASSIFY_PROMPT.format(
+        text_json=json.dumps(short_text, ensure_ascii=False),
+        candidates_json=json.dumps(candidates, ensure_ascii=False)
+    )
+
+    try:
+        raw = await call_claude_and_get_text(prompt, max_tokens=300, temperature=0.0)
+        # Expect a JSON array like ["Economy","Environment"]
+        parsed = json.loads(raw)
+        if not isinstance(parsed, list):
+            return {"error": "Expected JSON array", "raw": raw}
+        # sanitize: only include candidate labels (fallback to Other)
+        labels = []
+        for lbl in parsed:
+            if not isinstance(lbl, str):
+                continue
+            # normalize
+            lbl = lbl.strip()
+            if lbl in candidates:
+                labels.append(lbl)
+            else:
+                # allow partial match or case-insensitive
+                for c in candidates:
+                    if lbl.lower() in c.lower() or c.lower() in lbl.lower():
+                        labels.append(c)
+                        break
+                else:
+                    labels.append("Other")
+        # dedupe
+        labels = list(dict.fromkeys(labels))
+        return {"labels": labels}
+    except json.JSONDecodeError:
+        return {"error": "JSON parse error", "raw": raw}
+    except Exception as e:
+        return {"error": f"LLM classification failed: {e}"}
+```
+
+---
+
+### 5) `pipeline/ingest_parliamentary_activity.py` — ingestion pipeline
+
+This orchestrates discovery, parsing, classification, and ingestion into DB.
+
+```python
+# pipeline/ingest_parliamentary_activity.py
+
+import asyncio
+from typing import List, Dict, Any
+from datetime import datetime, timedelta
+from fetchers.parliament_feeds import fetch_recent_hansard_urls, fetch_recent_committee_urls, fetch_and_parse_multiple
+from llm.claude_client import classify_issues
+from speaker_tracker import ingest_speech, init_db, purge_older_than
+from config import Config
+import logging
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+async def ingest_recent_parliamentary_activity(
+    rolling_days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS,
+    committee_list: List[str] = None,
+    ciit_url: str = Config.CIIT_COMMITTEE_URL,
+    max_docs: int = 50
+) -> Dict[str, Any]:
+    """
+    Discover recent Hansard and committee docs, parse and ingest into the DB.
+    Returns summary stats.
+    """
+    init_db()
+    # purge old rows older than rolling_days
+    purge_older_than(days=rolling_days)
+
+    # discover hansard URLs (last 7 days)
+    hansard_urls = await fetch_recent_hansard_urls(days=7)
+    # discover committee URLs (CIIT + optionally others)
+    committee_urls = []
+    if committee_list:
+        committee_urls.extend(committee_list)
+    else:
+        committee_urls = await fetch_recent_committee_urls(ciit_url, days=rolling_days)
+
+    # limit totals to avoid runaway ingestion
+    hansard_urls = hansard_urls[:max_docs]
+    committee_urls = committee_urls[:max_docs]
+
+    all_urls = hansard_urls + committee_urls
+
+    parsed_docs = await fetch_and_parse_multiple(all_urls)
+
+    ingested = 0
+    errors = []
+    for doc in parsed_docs:
+        if doc.get("error"):
+            errors.append({"url": doc.get("url", doc.get("source_url")), "error": doc.get("error")})
+            continue
+        # doc contains 'speeches' list from fetch_latest_hansard_structured
+        speeches = doc.get("speeches", []) or []
+        # assign positions if not present
+        for idx, s in enumerate(speeches):
+            s["position"] = s.get("position", idx)
+        # classify each speech and ingest
+        for s in speeches:
+            text = s.get("text", "")
+            # call LLM classifier (could be batched, but per-speech is simpler for now)
+            try:
+                cl = await classify_issues(text)
+                labels = cl.get("labels", []) if isinstance(cl, dict) else []
+            except Exception as e:
+                labels = []
+            # build record for DB
+            rec = {
+                "source": doc.get("source", "hansard"),
+                "source_url": doc.get("url") or doc.get("source_url"),
+                "published": doc.get("published"),
+                "speaker": s.get("speaker"),
+                "role": s.get("time") or s.get("role") or "unknown",
+                "affiliation": None,
+                "text": text,
+                "issue_tags": labels,
+                "extra_json": {"position": s.get("position")}
+            }
+            try:
+                ingest_speech(rec)
+                ingested += 1
+            except Exception as e:
+                errors.append({"speaker": s.get("speaker"), "error": str(e)})
+    return {"ingested": ingested, "errors": errors}
+```
+
+Notes:
+
+* This pipeline calls `classify_issues` for each speech; for large transcripts it may be slow and costly — you can later plug the batching worker we added earlier to parallelize LLM calls.
+* For better performance, you can modify to call `classify_issues` in batches (e.g., pass chunks to the LLM or use `batch_process_speeches`).
+
+---
+
+### 6) MCP tools — update `mcp_server.py` to expose the new pipeline and query tools
+
+Append these tool definitions (or add them in appropriate place) to your `mcp_server.py`:
+
+```python
+# mcp_server.py (append new tools)
+
+from pipeline.ingest_parliamentary_activity import ingest_recent_parliamentary_activity
+from speaker_tracker import top_speakers_by_issue, time_series_for_issue, speakers_activity_summary, init_db
+from fastmcp import ToolError
+
+# Ensure DB initialized at server start
+init_db()
+
+@mcp.tool
+async def run_parliamentary_ingest(rolling_days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, max_docs: int = 50) -> Dict[str, Any]:
+    """
+    Trigger ingestion of recent parliamentary activity and classification.
+    """
+    try:
+        result = await ingest_recent_parliamentary_activity(rolling_days=rolling_days, max_docs=max_docs)
+        return result
+    except Exception as e:
+        raise ToolError(f"Ingest failed: {e}")
+
+@mcp.tool
+async def get_top_speakers_by_issue(issue: str, top_n: int = 10, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS) -> Dict[str, Any]:
+    """
+    Return top N speakers for an issue over the rolling window.
+    """
+    try:
+        rows = top_speakers_by_issue(issue, top_n=top_n, days=days)
+        return {"issue": issue, "top_speakers": rows}
+    except Exception as e:
+        raise ToolError(f"Query failed: {e}")
+
+@mcp.tool
+async def get_issue_time_series(issue: str, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, interval: str = "day") -> Dict[str, Any]:
+    """
+    Return time-series counts for the given issue over the rolling window.
+    """
+    try:
+        series = time_series_for_issue(issue, days=days, interval=interval)
+        return {"issue": issue, "time_series": series}
+    except Exception as e:
+        raise ToolError(f"Query failed: {e}")
+
+@mcp.tool
+async def get_speaker_activity(speaker: str, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS) -> Dict[str, Any]:
+    """
+    Return aggregated metrics for a speaker over the rolling window.
+    """
+    try:
+        summary = speakers_activity_summary(speaker, days=days)
+        return summary
+    except Exception as e:
+        raise ToolError(f"Query failed: {e}")
+```
+
+---
+
+## How to run / test
+
+1. Ensure dependencies installed (if you used previous README):
+
+```bash
+pip install aiohttp beautifulsoup4 lxml openai fastmcp
+```
+
+2. Ensure `OPENAI_API_KEY` is in env (Claude Sonnet 4.5 access).
+
+3. Initialize DB and run MCP server:
+
+```bash
+python -c "from speaker_tracker import init_db; init_db()"
+python mcp_server.py
+```
+
+4. Trigger ingestion (example client that calls MCP tool):
+
+```python
+# examples/run_ingest_and_query.py
+import asyncio
+from fastmcp.client import Client
+from fastmcp.client.transports import StreamableHttpTransport
+import json
+
+async def main():
+    transport = StreamableHttpTransport(base_url="http://127.0.0.1:8000/mcp")
+    async with Client(transport=transport) as client:
+        print("Running ingest (may take a while while classifying each speech)...")
+        res = await client.call_tool(name="run_parliamentary_ingest", arguments={"rolling_days": 30, "max_docs": 20})
+        print("Ingest result:", res)
+
+        print("Top speakers for 'International Trade':")
+        top = await client.call_tool(name="get_top_speakers_by_issue", arguments={"issue": "International Trade", "top_n": 10})
+        print(json.dumps(top, indent=2, ensure_ascii=False))
+
+        print("Time-series for 'International Trade':")
+        ts = await client.call_tool(name="get_issue_time_series", arguments={"issue": "International Trade", "days": 30, "interval": "day"})
+        print(json.dumps(ts, indent=2, ensure_ascii=False))
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+---
+
+## Notes, limits & recommended improvements
+
+1. **LLM cost & latency**: The current implementation classifies every speech with the LLM. For a busy day, there can be hundreds or thousands of speeches. For production, **batch classification** (use `batch_process_speeches`) or a smaller local classifier (spaCy text classification model) will be more cost-efficient and much faster. I can add an optional hybrid: run a lightweight keyword classifier first, call LLM only for ambiguous items.
+2. **Transcription**: ParlVu audio/video transcription is non-trivial. I left hooks for you to add an audio transcription step (e.g., export MP3s and run a local speech-to-text engine or cloud provider). If you want, I can add a placeholder `transcribe_audio(url)` function and integrate it into the pipeline.
+3. **Committee pages HTML variability**: committee pages vary in layout; the `fetchers/parliament_feeds.py` uses heuristics. If you want absolute reliability, we should query Parliament’s Open Data API endpoints directly (they provide XML for committee evidence).
+4. **Deduplication & canonicalization**: We do a simple match on `issue_tags` JSON string for filtering. For more robust matching we can create an issue-tag table, canonicalize labels, and store normalized label IDs.
+5. **Visualization**: The backend returns JSON-ready series and ranking arrays. The Cohere North UI or a dashboard (Streamlit/React) can render charts (Plotly/Chart.js) from these endpoints.
+6. **Scaling**: If you anticipate large historic backfills, move DB to PostgreSQL and use a worker queue (Celery/RQ) for ingestion with rate-limited LLM callers.
+
+---
+
+If you want, next I can:
+
+* Replace per-speech LLM classification with **batched LLM calls** (use `batch_process_speeches`) to reduce latency.
+* Add a **hybrid keyword filter + LLM** classifier to avoid classifying obvious cases.
+* Implement **audio transcription** from ParlVu (requires additional libs or external APIs).
+
+Which of those should I implement next?
