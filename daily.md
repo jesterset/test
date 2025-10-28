@@ -4966,3 +4966,371 @@ If you want, I can:
 3. Add an optional endpoint/tool `flush_ephemeral_store()` to clear memory on demand.
 
 Which of the three shall I produce immediately for you?
+
+
+Nice — below is a complete, ready-to-drop-in `mcp_server.py` that ties together the components we've discussed and exposes the FastMCP tools you need. It:
+
+* Initializes the ephemeral in-memory store and starts its background cleaner (via `init_store`).
+* Exposes Hansard / parliamentary tools (structured Hansard fetcher, speaker lists, timeline).
+* Exposes LLM-assisted tools (entities, speaker summaries, batched processing tools).
+* Exposes ingestion and analytics tools for the ephemeral store (run ingestion, top speakers, time series, speaker activity).
+* Exposes batcher controls (run batch processing, get last batch result).
+* Uses defensive error handling (wraps exceptions with `ToolError` so the LLM client sees friendly errors).
+* Runs the MCP server on `127.0.0.1:8000/mcp` using the streamable-http transport (safe default).
+
+Drop this file into your project root and run it (`python mcp_server.py`). It assumes the other modules we built earlier are present in the same package layout.
+
+```python
+# mcp_server.py
+"""
+FastMCP server exposing tools for the Real-Time Policy Brief Agent.
+
+Assumes the following modules exist in the project:
+ - fetchers.hansard_fetcher.fetch_latest_hansard_structured
+ - tasks.cache.fetch_with_cache
+ - llm.claude_client: extract_entities_and_events, summarize_speakers, batch_classify_issues, batch_summarize_speakers, batch_process_speeches
+ - storage.ephemeral_store: init_store, ingest_speech, purge_older_than, top_speakers_by_issue, time_series_for_issue, speakers_activity_summary, get_store_stats, flush
+ - pipeline.ingest_parliamentary_activity.ingest_recent_parliamentary_activity
+ - tasks.batcher: process_speeches_async, get_last_result
+"""
+
+import asyncio
+import logging
+from typing import Any, Dict, List, Optional
+
+from fastmcp import FastMCP, ToolError
+
+# fetchers / pipeline / storage / llm / batcher imports
+from fetchers.hansard_fetcher import fetch_latest_hansard_structured
+from tasks.cache import fetch_with_cache
+
+from llm.claude_client import (
+    extract_entities_and_events,
+    summarize_speakers,
+    batch_classify_issues,
+    batch_summarize_speakers,
+    batch_process_speeches,
+)
+
+from storage.ephemeral_store import (
+    init_store,
+    ingest_speech,
+    purge_older_than,
+    top_speakers_by_issue,
+    time_series_for_issue,
+    speakers_activity_summary,
+    get_store_stats,
+    flush as flush_ephemeral_store,
+)
+
+from pipeline.ingest_parliamentary_activity import ingest_recent_parliamentary_activity
+
+from tasks.batcher import process_speeches_async, get_last_result
+
+from config import Config
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+# Create FastMCP instance
+mcp = FastMCP("DailyBriefSystem")
+
+
+# ---------- Startup helper ----------
+async def _ensure_store_initialized() -> None:
+    """
+    Ensure ephemeral store is initialized (called once on server start).
+    """
+    # default TTL from config
+    ttl_days = getattr(Config, "DEFAULT_ROLLING_WINDOW_DAYS", 30)
+    # start the ephemeral store cleaner (init_store expects to be called in an async context)
+    init_store(ttl_days=ttl_days, cleanup_interval_seconds=60)
+    log.info("Ephemeral store initialized (ttl_days=%s)", ttl_days)
+
+
+# ---------- Hansard / Fetch tools ----------
+@mcp.tool
+async def get_latest_hansard_structured() -> Dict[str, Any]:
+    """
+    Fetch the latest Hansard (structured) using the fetcher with caching.
+    Returns the structured object (speeches, timeline, metadata).
+    """
+    try:
+        data = await fetch_with_cache("hansard_structured", fetch_latest_hansard_structured)
+        if isinstance(data, dict) and data.get("error"):
+            raise ToolError(data.get("error"))
+        return data
+    except ToolError:
+        raise
+    except Exception as e:
+        log.exception("get_latest_hansard_structured failed")
+        raise ToolError(f"Failed to fetch structured Hansard: {e}")
+
+
+@mcp.tool
+async def get_hansard_speakers(limit: int = 0) -> Dict[str, Any]:
+    """
+    Return list of speaker blocks (optionally truncated).
+    """
+    try:
+        data = await fetch_with_cache("hansard_structured", fetch_latest_hansard_structured)
+        if isinstance(data, dict) and data.get("error"):
+            raise ToolError(data.get("error"))
+        speeches = data.get("speeches", [])
+        if limit and limit > 0:
+            speeches = speeches[:limit]
+        return {"count": len(speeches), "speeches": speeches}
+    except ToolError:
+        raise
+    except Exception as e:
+        log.exception("get_hansard_speakers failed")
+        raise ToolError(f"Failed to fetch Hansard speakers: {e}")
+
+
+@mcp.tool
+async def get_hansard_timeline(limit: int = 20) -> Dict[str, Any]:
+    """
+    Return timeline events extracted from the latest Hansard (limit applies).
+    """
+    try:
+        data = await fetch_with_cache("hansard_structured", fetch_latest_hansard_structured)
+        if isinstance(data, dict) and data.get("error"):
+            raise ToolError(data.get("error"))
+        timeline = data.get("timeline", [])
+        if limit and limit > 0:
+            timeline = timeline[:limit]
+        return {"count": len(timeline), "timeline": timeline}
+    except ToolError:
+        raise
+    except Exception as e:
+        log.exception("get_hansard_timeline failed")
+        raise ToolError(f"Failed to fetch Hansard timeline: {e}")
+
+
+# ---------- LLM-assisted tools (entities, speaker summaries, batching) ----------
+@mcp.tool
+async def get_hansard_entities(limit: int = 200, persona: Optional[str] = None, tone: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Run LLM-assisted NER & event extraction on the latest Hansard speeches (batched).
+    - limit: max number of speech blocks to include.
+    - persona/tone: optional prompt tuning for context.
+    """
+    try:
+        data = await fetch_with_cache("hansard_structured", fetch_latest_hansard_structured)
+        if isinstance(data, dict) and data.get("error"):
+            raise ToolError(data.get("error"))
+        speeches = data.get("speeches", []) or []
+        # add positions and trim
+        for idx, s in enumerate(speeches):
+            s["position"] = s.get("position", idx)
+        if limit and limit > 0:
+            speeches = speeches[:limit]
+        result = await extract_entities_and_events(speeches)
+        return result
+    except ToolError:
+        raise
+    except Exception as e:
+        log.exception("get_hansard_entities failed")
+        raise ToolError(f"Failed to run NER on Hansard: {e}")
+
+
+@mcp.tool
+async def get_hansard_speaker_summaries(limit: int = 50, persona: Optional[str] = None, tone: Optional[str] = "detailed") -> Dict[str, Any]:
+    """
+    Produce speaker-indexed 2-4 sentence summaries for the latest Hansard.
+    - limit: max number of speakers to summarize.
+    - persona/tone: passed to LLM prompt manager.
+    """
+    try:
+        data = await fetch_with_cache("hansard_structured", fetch_latest_hansard_structured)
+        if isinstance(data, dict) and data.get("error"):
+            raise ToolError(data.get("error"))
+        speeches = data.get("speeches", []) or []
+        for idx, s in enumerate(speeches):
+            s["position"] = s.get("position", idx)
+        # call the summarizer (uses batch internally if needed)
+        result = await summarize_speakers(speeches, max_speakers=limit)
+        return result
+    except ToolError:
+        raise
+    except Exception as e:
+        log.exception("get_hansard_speaker_summaries failed")
+        raise ToolError(f"Failed to create speaker summaries: {e}")
+
+
+# ---------- Batcher tools (background batch processing) ----------
+@mcp.tool
+async def run_hansard_batch_processing(
+    persona: str = "default",
+    tone: str = "detailed",
+    ner_batch_size: int = 50,
+    summary_batch_size: int = 20,
+    concurrency: int = 3
+) -> Dict[str, Any]:
+    """
+    Trigger batch processing on the latest Hansard:
+      - gets latest structured hansard
+      - runs the batching worker for NER and speaker summaries
+    Returns the batch worker result (aggregated entities/events/speaker_summaries + stats)
+    """
+    try:
+        data = await fetch_with_cache("hansard_structured", fetch_latest_hansard_structured)
+        if isinstance(data, dict) and data.get("error"):
+            raise ToolError(data.get("error"))
+        speeches = data.get("speeches", []) or []
+        # ensure positions
+        for idx, s in enumerate(speeches):
+            s["position"] = s.get("position", idx)
+        # call batch processor (process_speeches_async is available in tasks.batcher)
+        processed = await process_speeches_async(
+            speeches,
+            persona=persona,
+            tone=tone,
+            ner_batch_size=ner_batch_size,
+            summary_batch_size=summary_batch_size,
+            concurrency=concurrency
+        )
+        return processed
+    except ToolError:
+        raise
+    except Exception as e:
+        log.exception("run_hansard_batch_processing failed")
+        raise ToolError(f"Failed to run hansard batch processing: {e}")
+
+
+@mcp.tool
+async def get_last_hansard_processing_result() -> Dict[str, Any]:
+    """
+    Return the most recent batch processing result (if any).
+    """
+    try:
+        res = get_last_result()
+        if not res:
+            return {"status": "none", "message": "No previous processing runs found"}
+        return {"status": "ok", "last_run": res}
+    except Exception as e:
+        log.exception("get_last_hansard_processing_result failed")
+        raise ToolError(f"Failed to get last processing result: {e}")
+
+
+# ---------- Ingest + Analytics tools (ephemeral store-backed) ----------
+@mcp.tool
+async def run_parliamentary_ingest(rolling_days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, max_docs: int = 50) -> Dict[str, Any]:
+    """
+    Run the ingestion pipeline that discovers, validates, classifies (batched), summarizes (batched),
+    canonicalizes, and ingests speeches into the ephemeral store.
+    """
+    try:
+        result = await ingest_recent_parliamentary_activity(rolling_days=rolling_days, max_docs=max_docs)
+        return result
+    except Exception as e:
+        log.exception("run_parliamentary_ingest failed")
+        raise ToolError(f"Ingest failed: {e}")
+
+
+@mcp.tool
+async def get_top_speakers_by_issue(issue: str, top_n: int = 10, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS) -> Dict[str, Any]:
+    """
+    Return top N speakers for an issue over the rolling window (ephemeral in-memory store).
+    """
+    try:
+        rows = top_speakers_by_issue(issue, top_n=top_n, days=days)
+        return {"issue": issue, "top_speakers": rows}
+    except Exception as e:
+        log.exception("get_top_speakers_by_issue failed")
+        raise ToolError(f"Query failed: {e}")
+
+
+@mcp.tool
+async def get_issue_time_series(issue: str, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS, interval: str = "day") -> Dict[str, Any]:
+    """
+    Return time-series counts for the given issue over the rolling window.
+    """
+    try:
+        series = time_series_for_issue(issue, days=days, interval=interval)
+        return {"issue": issue, "time_series": series}
+    except Exception as e:
+        log.exception("get_issue_time_series failed")
+        raise ToolError(f"Query failed: {e}")
+
+
+@mcp.tool
+async def get_speaker_activity(speaker: str, days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS) -> Dict[str, Any]:
+    """
+    Return aggregated metrics and recent summaries for a speaker over the rolling window.
+    """
+    try:
+        summary = speakers_activity_summary(speaker, days=days)
+        return summary
+    except Exception as e:
+        log.exception("get_speaker_activity failed")
+        raise ToolError(f"Query failed: {e}")
+
+
+# ---------- Admin / helper tools ----------
+@mcp.tool
+async def purge_ephemeral_store(days: int = Config.DEFAULT_ROLLING_WINDOW_DAYS) -> Dict[str, Any]:
+    """
+    Purge ephemeral store older than `days`.
+    """
+    try:
+        result = purge_older_than(days)
+        return result
+    except Exception as e:
+        log.exception("purge_ephemeral_store failed")
+        raise ToolError(f"Purge failed: {e}")
+
+
+@mcp.tool
+async def flush_store() -> Dict[str, Any]:
+    """
+    Flush the entire ephemeral store (clear memory).
+    """
+    try:
+        flush_ephemeral_store()
+        return {"status": "ok", "message": "Ephemeral store flushed"}
+    except Exception as e:
+        log.exception("flush_store failed")
+        raise ToolError(f"Flush failed: {e}")
+
+
+@mcp.tool
+async def get_store_stats_tool() -> Dict[str, Any]:
+    """
+    Return in-memory store stats (count, oldest/newest published).
+    """
+    try:
+        stats = get_store_stats()
+        return {"status": "ok", "stats": stats}
+    except Exception as e:
+        log.exception("get_store_stats_tool failed")
+        raise ToolError(f"Get store stats failed: {e}")
+
+
+# ---------- Startup and server run ----------
+if __name__ == "__main__":
+    # Start ephemeral store init in the running loop, then start MCP server
+    # The FastMCP `run` call will start the server and event loop.
+    # We schedule the store init to run before the server opens tools (best-effort).
+    async def _main():
+        await _ensure_store_initialized()
+        # Run the MCP server (streamable-http transport)
+        # host=127.0.0.1 for internal safety
+        mcp.run(transport="streamable-http", host="127.0.0.1", port=8000, mount_path="/mcp")
+
+    # Run top-level
+    try:
+        asyncio.run(_main())
+    except KeyboardInterrupt:
+        log.info("MCP server shutting down (KeyboardInterrupt)")
+    except Exception:
+        log.exception("Error running MCP server")
+```
+
+If you want, I can:
+
+* Add example `curl`/client snippets to call the tools (or full example clients for each tool).
+* Add role-based minimal access control (token auth) for the streamable HTTP endpoint.
+* Wire in an immediate startup ingest (run `run_parliamentary_ingest` on server start) as an option.
+
+Which of those would you like next?
