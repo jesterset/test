@@ -4642,3 +4642,327 @@ If you want, I’ll:
 * Add an **admin review UI** that surfaces low-match-score GEDS resolutions for human verification (CSV export).
 
 Which of those would you like me to do next?
+
+Yes — absolutely. Below I’ll give you a safe, ready-to-drop-in **ephemeral in-memory store** implementation plus the integration notes you need. This keeps everything **only in process memory**, with automatic TTL-based eviction and an async background cleaner. Data will vanish on process exit or restart (exactly ephemeral). It supports the same query surface you’ve been using (top speakers by issue, time-series, speaker summaries), integrates with your existing pipeline and GEDS resolver, and plays nicely with the FastMCP tools.
+
+I kept the design simple and robust:
+
+* Thread-safe in-memory lists and indices.
+* TTL/rolling-window eviction (configurable).
+* Background asyncio cleanup task (configurable frequency).
+* Fast, in-process queries (no network or disk I/O).
+* Clear warnings on ephemeral nature and memory sizing.
+
+Drop the file `storage/ephemeral_store.py` into your project and point your pipeline / MCP tools to it instead of the JSON-backed store.
+
+---
+
+## File: `storage/ephemeral_store.py`
+
+```python
+# storage/ephemeral_store.py
+"""
+Ephemeral in-memory speech store with TTL and rolling-window eviction.
+Data lives only in memory for the lifetime of the process and is NOT persisted.
+
+API:
+- init_store(ttl_days: int = 30, cleanup_interval_seconds: int = 60)
+- ingest_speech(record: dict)  # record must include 'published' ISO timestamp and 'issue_tags' list, etc.
+- purge_older_than(days: int)
+- top_speakers_by_issue(issue: str, top_n: int = 10, days: int = 30)
+- time_series_for_issue(issue: str, days: int = 30, interval: str = "day")
+- speakers_activity_summary(speaker: str, days: int = 30)
+- flush()  # clear everything
+- get_store_stats()  # counts/timestamps
+
+Notes:
+- Ephemeral: everything is in process memory. Restart = full loss.
+- Designed for ephemeral realtime workloads and quick testing.
+"""
+
+from typing import Dict, Any, List, Optional
+import threading
+from datetime import datetime, timedelta
+from collections import Counter, defaultdict
+import asyncio
+import logging
+
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+# In-memory list of records
+_STORE: List[Dict[str, Any]] = []
+_LOCK = threading.Lock()
+_CLEANUP_TASK: Optional[asyncio.Task] = None
+_TTL_DAYS: int = 30
+_CLEANUP_INTERVAL_SECONDS: int = 60  # how often background cleaner runs
+
+def _now_iso() -> str:
+    return datetime.utcnow().isoformat()
+
+def init_store(ttl_days: int = 30, cleanup_interval_seconds: int = 60) -> None:
+    """
+    Initialize ephemeral store and start background cleanup task.
+    Must be called once from an async context or at startup.
+    """
+    global _TTL_DAYS, _CLEANUP_INTERVAL_SECONDS, _CLEANUP_TASK
+    _TTL_DAYS = ttl_days
+    _CLEANUP_INTERVAL_SECONDS = cleanup_interval_seconds
+
+    # Create background cleanup task if we are running in an event loop context
+    try:
+        loop = asyncio.get_running_loop()
+        if _CLEANUP_TASK is None or _CLEANUP_TASK.done():
+            _CLEANUP_TASK = loop.create_task(_background_cleaner())
+            log.info("Ephemeral store cleanup task started (ttl_days=%s interval_s=%s)", _TTL_DAYS, _CLEANUP_INTERVAL_SECONDS)
+    except RuntimeError:
+        # No running loop; caller can call start_background_cleaner(loop) later
+        log.info("No running event loop detected; background cleaner task not started. Call init_store inside async app or manually start cleaner.")
+
+
+async def _background_cleaner():
+    """
+    Periodically purge old records.
+    """
+    while True:
+        try:
+            purge_older_than(_TTL_DAYS)
+        except Exception:
+            log.exception("Ephemeral store cleaner error")
+        await asyncio.sleep(_CLEANUP_INTERVAL_SECONDS)
+
+
+def ingest_speech(record: Dict[str, Any]) -> None:
+    """
+    Ingest a speech record into ephemeral store.
+    Expected fields: at least 'published' (ISO string or datetime), 'speaker', 'text', 'issue_tags' (list)
+    We normalize missing fields.
+    """
+    with _LOCK:
+        r = record.copy()
+        # normalize published
+        pub = r.get("published")
+        if isinstance(pub, datetime):
+            r["published"] = pub.isoformat()
+        if not r.get("published"):
+            r["published"] = _now_iso()
+        # ensure issue tags list
+        if r.get("issue_tags") is None:
+            r["issue_tags"] = []
+        # compute word_count
+        if "word_count" not in r:
+            r["word_count"] = len(str(r.get("text", "")).split())
+        r["_ingested_at"] = _now_iso()
+        _STORE.append(r)
+
+
+def purge_older_than(days: int = 30) -> Dict[str, Any]:
+    """
+    Remove records older than now - days (based on published timestamp).
+    Returns stats.
+    """
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    with _LOCK:
+        before = len(_STORE)
+        _STORE[:] = [r for r in _STORE if r.get("published") and r.get("published") >= cutoff]
+        after = len(_STORE)
+    deleted = before - after
+    log.debug("Ephemeral purge: removed %d records older than %s", deleted, cutoff)
+    return {"deleted": deleted, "remaining": after, "cutoff": cutoff}
+
+
+def flush() -> None:
+    """Clear entire store immediately."""
+    with _LOCK:
+        _STORE.clear()
+
+
+def get_store_stats() -> Dict[str, Any]:
+    with _LOCK:
+        return {"count": len(_STORE), "oldest_published": (_STORE[0]["published"] if _STORE else None), "newest_published": (_STORE[-1]["published"] if _STORE else None)}
+
+
+# Query helpers (in-memory)
+def _filter_by_window(records: List[Dict[str, Any]], days: int) -> List[Dict[str, Any]]:
+    if days is None:
+        return records
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    return [r for r in records if r.get("published") and r.get("published") >= cutoff]
+
+
+def top_speakers_by_issue(issue: str, top_n: int = 10, days: int = 30) -> List[Dict[str, Any]]:
+    """
+    Return top speakers by count of interventions and total words for the last `days` days.
+    """
+    with _LOCK:
+        rows = [r for r in _STORE if issue in (r.get("issue_tags") or [])]
+    rows = _filter_by_window(rows, days)
+    counts = Counter()
+    words = Counter()
+    for r in rows:
+        speaker = r.get("speaker") or r.get("speaker_name") or "(unknown)"
+        counts[speaker] += 1
+        words[speaker] += r.get("word_count", 0)
+    out = []
+    for speaker, cnt in counts.most_common(top_n):
+        out.append({"speaker": speaker, "count": cnt, "total_words": words[speaker]})
+    return out
+
+
+def time_series_for_issue(issue: str, days: int = 30, interval: str = "day") -> List[Dict[str, Any]]:
+    """
+    Produce daily (or hourly) time-series counts for the issue over the last `days`.
+    Returns a list with continuous periods (including zeros).
+    """
+    with _LOCK:
+        rows = [r for r in _STORE if issue in (r.get("issue_tags") or [])]
+    rows = _filter_by_window(rows, days)
+    ts = defaultdict(int)
+    for r in rows:
+        try:
+            dt = datetime.fromisoformat(r.get("published"))
+        except Exception:
+            continue
+        if interval == "hour":
+            key = dt.strftime("%Y-%m-%dT%H:00:00")
+        else:
+            key = dt.strftime("%Y-%m-%d")
+        ts[key] += 1
+    # generate continuous timeline
+    now = datetime.utcnow()
+    result = []
+    for i in range(days-1, -1, -1):
+        day = now - timedelta(days=i)
+        key = day.strftime("%Y-%m-%d") if interval != "hour" else day.strftime("%Y-%m-%dT%H:00:00")
+        result.append({"period": key, "count": ts.get(key, 0)})
+    return result
+
+
+def speakers_activity_summary(speaker: str, days: int = 30) -> Dict[str, Any]:
+    """
+    Aggregated activity for a speaker over the last `days`.
+    """
+    with _LOCK:
+        rows = [r for r in _STORE if (r.get("speaker") == speaker or r.get("speaker_name") == speaker)]
+    rows = _filter_by_window(rows, days)
+    total = len(rows)
+    total_words = sum(r.get("word_count", 0) for r in rows)
+    issues = set()
+    for r in rows:
+        for t in (r.get("issue_tags") or []):
+            issues.add(t)
+    # Optionally include recent summaries stored in extra_json
+    recent_summaries = []
+    for r in sorted(rows, key=lambda x: x.get("published", ""), reverse=True)[:5]:
+        ssum = (r.get("extra_json") or {}).get("speaker_summary") or None
+        if ssum:
+            recent_summaries.append({"published": r.get("published"), "summary": ssum, "source_url": r.get("source_url")})
+    return {
+        "speaker": speaker,
+        "count": total,
+        "total_words": total_words,
+        "issues": sorted(list(issues)),
+        "recent_summaries": recent_summaries
+    }
+```
+
+---
+
+## How to wire this into your existing pipeline
+
+1. Replace imports in your ingestion pipeline and MCP tools:
+
+   * Previously:
+
+     ```py
+     from storage.memory_store import ingest_speech, init_store, purge_older_than
+     ```
+   * Now:
+
+     ```py
+     from storage.ephemeral_store import ingest_speech, init_store, purge_older_than, get_store_stats
+     ```
+
+2. At server startup (in `mcp_server.py` or main app), call `init_store()` with the TTL and cleanup interval you want. Example (preferred in async context):
+
+   ```py
+   # in mcp_server.py
+   import asyncio
+   from storage.ephemeral_store import init_store
+
+   # call init_store inside startup hook or top-level if server runs event loop
+   init_store(ttl_days=30, cleanup_interval_seconds=60)
+   ```
+
+   If you run `mcp.run()` which creates an event loop, make sure `init_store()` is called after the loop starts (e.g., in an async startup function) so the background cleaner task can be created. If you cannot start the cleaner, the `purge_older_than()` function still works — call it periodically from your worker.
+
+3. In the ingestion pipeline, replace `ingest_speech(record)` to call the ephemeral `ingest_speech`. Records ingested should follow the same shape you have been using (include `published`, `speaker`, `text`, `issue_tags`, `extra_json`).
+
+4. MCP tools remain the same — they will now query the ephemeral store functions.
+
+---
+
+## Example: Integrating into pipeline snippet
+
+```py
+# pipeline/ingest_parliamentary_activity.py (snippet)
+from storage.ephemeral_store import ingest_speech, init_store, purge_older_than
+
+# at startup
+init_store(ttl_days=30, cleanup_interval_seconds=60)
+
+# when ingesting each speech (after classification and summary)
+rec = {
+  "source": "parliamentary",
+  "source_url": s["source_url"],
+  "published": s["time"],
+  "speaker": canonical_full_name or s.get("speaker"),
+  "speaker_id": speaker_id,
+  "party": party,
+  "constituency": constituency,
+  "text": s["text"],
+  "issue_tags": labels,
+  "extra_json": {
+     "position": s["position"],
+     "speaker_summary": speaker_summaries.get(s.get("speaker")),
+     "doc_valid": s.get("doc_valid")
+  }
+}
+ingest_speech(rec)
+```
+
+---
+
+## Pros & Cons — short summary
+
+Pros
+
+* Extremely fast and simple to run; no external infra.
+* Great for ephemeral testing, session-based briefs, or single-user brief agents.
+* Automatic TTL eviction avoids unlimited memory growth.
+* Easy to reset/flush.
+
+Cons
+
+* Data lost on process restart (ephemeral by design).
+* Memory-limited — large backfills or many transcripts may exhaust process memory.
+* No cross-process sharing — not suitable for multi-server distributed setups.
+* Queries are in-process (no OpenSearch-level aggregations). For heavy analytics, add OpenSearch later.
+
+---
+
+## Extra options if you later want lightweight persistence or multi-instance ephemeral behavior
+
+* Switch to **Redis** in volatile mode (no AOF; disable persistence) to get ephemeral cross-process store with pub/sub and TTL.
+* Use **in-memory** store + occasional snapshot to S3/MinIO if you want short-lived ephemeral with crash recovery.
+* If you want to keep ephemeral but reduce memory footprint: store only aggregates (counters & recent speaker summaries) in memory rather than full texts.
+
+---
+
+If you want, I can:
+
+1. Provide the small `mcp_server.py` changes to call `init_store()` at startup (async-safe).
+2. Replace current pipeline imports and produce a full patched `pipeline/ingest_parliamentary_activity.py` that writes to the ephemeral store (ready-to-run).
+3. Add an optional endpoint/tool `flush_ephemeral_store()` to clear memory on demand.
+
+Which of the three shall I produce immediately for you?
