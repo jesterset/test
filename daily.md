@@ -5484,191 +5484,368 @@ You are the Director of Infrastructure for the City of Ottawa. Provide a daily f
 Would you like me to also generate **persona prompt variants** for different *summary tones* (e.g., “executive concise”, “operational detailed”, “strategic overview”) next?
 That would allow LLMs to tailor summaries for different contexts (e.g., quick read vs. full analysis).
 
-
-Finally back to 100%… more on this.
-
-I’ve never done this before. Never felt the need to. Never. But I’m compelled — in light of recent events.
-
-This message is brought to you by yours truly, with the following disclaimers: please ensure you have AirPods in… I’ll wait… …. ready … … ok …. this is due to the presence of expletives. You are not high or under the influence. Now, back to this exclusive programming.
-
-First, let me apologize. I’m truly sorry for making you feel the way I did — for drawing you to that conclusion. I’m 100% sure it’s stemming from misunderstandings we can communicate through. The key is communicate. We made a pinky promise to be honest, remember? And as you know, pinky promises are taken with the utmost seriousness.
-
-I was taken aback reading your message, but I was too KO’d to respond fully. Even the message I sent after reaching work was dry at best — I just wanted to get some appreciation out before succumbing completely to being KO’d
-
-Leaving you, I knew something was not right. My last memories: the expression of surprise on your face when I said I had to go to work… then quickly to “whatever” as the hug abruptly faded and you walked away. A final look back as you pushed open the door. I wave. No wave back as you walked through.
-
-*Romantic spark… missing… hmmm… romantic spark… not there… don’t see this progressing.*
-
-Let’s make that make sense.
-
-Our whole ordeal screams a delicate dance between two fragile yet intricate worlds — circling one another within an invisible yet melodic tension of unpatterned, periodic push and pull.
-
-The witty hits. The whimsy remarks. The clever cuts. All embroiled in the veil of anticipatory tension that would be our first meet. Unfortunately that first meet was delayed because I had to jet-set to SF… but our dance continued. Our conversation flowed. The timings of each message kept things interesting, somehow perfectly placed by nature’s whimsy of time zones between us. Some remarks made under bated breath — I’ll willingly admit — I wanted to come true. Like you arriving in SF, waiting in my hotel lobby and me arriving with a fancy beverage in hand, ready to sweep me off my feet. What you don’t know is I *did* show up with a fancy beverage in hand — Vietnamese dripped iced coffee with coconut cream — you know, just in case…
-
-When I returned to Toronto, for a second I wondered if Celine would be waiting at arrivals with one of those stupid signs. That’d be hilarious. Wishful thinking.
-
-Then we proceed to our first date — the culmination of intense anticipation. Putting you on to mango mochi. The story behind the custom peonies… it’s hard to find green (your favorite color) non-tacky flowers. And a bouquet of stems — only green sticks — I’m sure you’d agree would be uneventful. But yes, they are fragrant. You feel their presence even when not in sight…a representation of you … whether it be your messages, shares, voice notes… hopefully later, calls.
-
-In the words of our boy Tom DeLonge:
-
-*In the car, I just can't wait  
-To pick you up on our very first date  
-Is it cool if I hold your hand?  
-Is it wrong if I think it's lame to dance?  
-Do you like my stupid hair?  
-Would you guess that I didn't know what to wear?  
-I'm just scared of what you think  
-You make me nervous, so I really can't eat*
-
-Honestly, seeing you for the first time — I was floored. Wanted to give you the deepest hug, sweep you off your feet… the whole gamut. But I had to stay measured.
-
-We went to eat. Happy that the sustenance options were your top two. Saw your eyes briefly for the first time when you removed your sunglasses… and man. What went through my mind were the lines of Will to Sean from my favorite movie, *Good Will Hunting*: *Yeah, but this girl's like, you know, beautiful. She's smart. She's fun. It's different from most of the girls I've been with.* After finishing up in the bathroom to head to our hike, you come out and grace my left shoulder, then tricep, then forearm… before saying shall we. To go to the car I wanted to sweep you off your feet, take you right then and there… the whole gamut. But I had to stay measured.
-
-We go to our hike at Evergreen. While walking I’d see you look at me from time to time with googly eyes, hands behind your back, a bounce in your step, looking all cute and shit.
-
-Tom makes another appearance:
-
-*When you smile, I melt inside  
-I'm not worthy for a minute of your time  
-I really wish it was only me and you  
-I'm jealous of everybody in the room  
-Please don't look at me with those eyes  
-Please, don't hint that you're capable of lies  
-I dread the thought of our very first kiss  
-A target that I'm probably gonna miss*
-
-We get back to the car… You have no idea… I wanted to sweep you off your feet, take you right then and there… the whole gamut. But I had to stay measured.
-
-You read the note I penned while nodding emphatically to the words as they streamed, eatting the mochi — getting the *ok ok ok I see I see*.
-
-We conclude the date. You turn to me and say you are speechless. I am glad. Oh, did I want to kiss you… take you right then and there… the whole gamut. But I had to stay measured.
-
-You message you can’t stop smiling. I am ecstatic. You say g’night — to me this melts my heart. To have as your last before you signed off your day. An honor. Just like a g’morning opens one’s day.
-
-A couple days later you fly out to Italy. What are we writing, a romance novel here? Did I want to see you off at the airport — yes… but I had to stay measured.
-
-You fly out. We pen pal. You share your day, I do the same. Discussions on deep topics. Debating the minds eye. Is this a movie in the making?
-
-We have whimsy witty bantz. You try and figure out when I send you messages — before or after I sleep. I relish the game. Also, am so happy that your thoughts include me.
-
-I ask you, out of a whim, to write a love letter — maiden to her waiting courter. You obliged. I cannot wait for your return.
-
-You return from Italy… and that’s where I notice a slight shift in our back and forths. Less emojis and reacts. I’m like, shoot — I know she is waiting for romance …
-
-Monday comes about. I really don’t want to wait for Friday. I ask if you want to run after soccer. You oblige. This was it. This is where I ask you if we can hold hands.
-
-We meet up. I didn’t hug you — been sweating for 2hrs straight, will she find this gross? You ask me about my water situation — warms my heart. You bring me bubbly —absolutely hilarious. We run.
-
-I’m like, ok, we hold hands till the Queens Quay… but no, it was more like we are running, let’s run. That is the way. We ain’t a run club, ahaha.
-
-We stop at the amphitheater. Sit on the rocks. You show me the skyline and say that’s a great view. In my mind I say I have two. I contemplate breaking the barrier. I’ve been sweating for 2.5hrs now — will she find this gross if I got close…
-
-We have to head back, it’s late. Was looking to walk back — for the purposes of asking to hold your hand — but you started running. Then asked if I wanted to walk. But I’m like, no it’s ok it’s late… we will run. Concluding, I give you a hug — we are both sweating at that point. I wanted to sweep you off your feet, take you right then and there… the whole gamut. But I had to stay measured. Hand holding will have to wait. You tell me you feel so good. I am ecstatic.
-
-Friday is approaching. The messaging goes back to normal — emojis and reacts return. Last-min change-up with the plans to make it a surprise. A 50% chance of crashing.Thursday voice messages ensue. I tell you that I like you… in fact, quite a bit. 
-
-Friday comes along. You might want to make sure your AirPods are snuggled and sitting correctly… I’ll wait… ready…
-
-We meet. Ok — hug her, dammit. Propose the game. You’re down. But we don’t have a surface. Omg, already crashing. We make it work. Phew. We rock with the game mechanics. Sort out our food.
-
-Every time you got out of the car and came back… Celine, you have no idea. Will speaking again: *You know, I mean, you know, this girl's like fucking perfect right now. I don't want to ruin that.* I wanted to sweep you off your feet, take you right then and there… the whole gamut. But I had to stay measured.
-
-We land in the park for the picnic. We put out our spread. What a glorious sight.
-
-As we clear up the food you start to make yourself comfortable. You lay down. I’m thinking — can I just go over and have her lay on my lap… she looks a bit cold… can I ask about a blanket I bought for her… then I can sit closer… spoon her?? You were ok. Alright, let’s clear the rest… ok she is sitting up, let me sit beside her and ask her if she wants to lay with me…
-
-…we lay. You ask about my messages… something about me liking you. And you replied I like you too. And signed, sealed, and delivered it with a kiss.
-
-You had messaged me earlier “i’m yours” — at first I did not see the music symbol emoji. My heart actually skipped many beats. Then I saw the emoji and I’m like ahhh, “by Stevie”… but here and now… I truly felt “i’m yours” by Celine.
-
-Instant fireworks.
-
-We touched. Sprawled. Caressed. Squeezed. Brushed. Healed. Your tongue against mine, lip to lip, breath to breath — every sensation flooding in at once — until the sprinklers. This has to be a movie. A tale of fantasy. We cannot believe what happened. We laugh, giggle, with joy and lightness as if we were the only two in the world.
-
-We pack up, run quickly to the car to avoid a repeat soaking, and continue.
-
-Continue we did.
-
-***
-
-You come into my arms like you’ve been waiting all night for the permission to stop holding back. I lean back against the car to match your height. For a long second we just look at each other — close enough that I can feel the heat coming off your skin, close enough that every exhale of yours, ghosts across my mouth. We don’t rush it. We let the air between us get thick.
-
-The first kiss is almost nothing. The lightest brush of lower lip against lower lip. A pause. Another brush, slower. I feel you smile against my mouth before you tilt in and actually take it — soft at first, testing, tasting. Then your tongue slips past my lips and I meet it, and the careful thing collapses.
-
-We start slow on purpose. Lips sealing, parting, sealing again. Tongues sliding, retreating, coming back hungrier. I keep one hand at the small of your back and the other comes up to cradle the side of your neck, thumb resting just under your jaw so I can feel your pulse climbing. You make this tiny sound into my mouth — not quite a moan yet, more like your body forgetting to stay quiet — and it goes straight through me.
-
-I break just enough to drag my mouth along your jaw. Slow. Open. Wet. Down to the spot just below your ear. I kiss there once, twice, then open wider and suck — gentle at first, then firmer — until I feel you shiver hard against me. My teeth graze the tendon in your neck. You gasp and your fingers dig into my sides. I do it again on the other side, taking my time, mapping every place that makes your breath hitch. Carotid. The soft hollow behind your ear. The place where your neck meets your shoulder. Kisses turning into slow bites, bites turning into the flat of my tongue dragging hot over the marks I’m leaving.
-
-You grab my forearm and hold it like you need the anchor. I switch sides again — part your curls with my fingers, expose the other lobe, the other stretch of throat — and start the whole slow campaign over. Your breathing has gone ragged already. Short, then longer, then catching. I use it like a metronome. When you hold your breath I press harder. When you exhale shaking I soften and lick. You’re gripping both my arms now, tight enough that I can feel your nails.
-
-You push off just far enough to look at me, chest rising fast, eyes already glassy.
-
-“You have no business turning me on like this right now.”
-
-More deep breaths. You’re trying to reset and failing. You tell me one of your biggest boxes to check is a good kisser and the right touch. I ask for the verdict. You nod, bottom lip caught between your teeth, gaze dropping like you can’t hold mine without giving everything away. Then quieter, almost disbelieving: you say you’ve never been able to relax into someone’s arms this easily the first time. I’m gone for you in that second. Completely.
-
-We stare. *I see you. I feel you.* On loop. Your eyes catch the light and go a little gold; it feels like the park, the cars, the entire city are burning away at the edges. I lean back in.
-
-This kiss is filthier from the first second. Your tongue is in my mouth immediately, insistent. We lock and hold — lips sealed, breathing through our noses, bodies pressed flush — until the need for air wins. When we break, a thin string of saliva connects us for a heartbeat. I lick your top lip slowly. My tongue catches your teeth by accident and you make this punched-out little gasp. I suck your bottom lip into my mouth and worry it between my teeth. You surge forward, crushing your mouth to mine, tongue fucking against mine like you’re trying to crawl inside.
-
-I kiss your cheeks. Your closed eyelids. Your forehead. Then back down the column of your throat, slower than before, wetter. This time I only use the texture of my tongue — the papillae dragging over the fine vellus hair on your neck. The sensation is barely there and somehow worse for it. You squirm. Your hips shift. I slot one thigh between yours and the heat of you soaks through fabric instantly.
-
-You start moving.
-
-Small at first. Experimental rolls of your hips, dragging your pussy along the hard line of my thigh. Short strokes. You find an angle and your breath stutters. A faint moan slips out — the real one, unguarded. You adjust: longer drags now, like you’re trying to spread yourself open on me, trying to get your clit seated against the muscle just right. I flex my quad and you make a broken sound of relief. There. You lock it in and the strokes get shorter, faster, filthier. The friction is deliberate. You’re grinding on me like you need it to think.
-
-My hands finally stop behaving.
-
-Left hand strokes up the outside of your free thigh, slow, claiming. Right hand slides under your top and palms the underside of your breast, feeling the weight, the heat, the way your nipple is already a hard point against my wrist. I squeeze your ass with the other hand — full grip, fingers digging in — and pull you harder onto my thigh. You seat yourself deeper. Every kiss I plant on your neck now pulls a wince or a moan out of you. I spread your cheeks through your clothes and your mouth falls open against my ear, panting.
-
-I move my hand up your thigh and find your ass. I don’t grab hard at first — I feel you up gently, palm slow over the curve, fingers spreading just enough to take you in. Under my hand you break out in goosebumps, skin prickling hot against my palm. You’re aroused. I can feel it in the way the flesh tightens, in the full-body shiver you try to hide. Only then do I properly grip you, pull you in.
-
-I need to know.
-
-My hand slips between us, between your legs from behind. I run two fingers along the edge of your thong. Soaked. The fabric is dark with it, clinging. I stroke along the side of your labia through the wet cotton and you moan properly this time, low and helpless, and drop your forehead onto my shoulder. I press harder — still outside, still only teasing the shape of you — and feel how swollen you are, how slick. I rub slow circles just beside your clit, never directly on it, matching the rhythm of your grinding. You’re dripping. I can feel it cooling on my fingers.
-
-You bite my shoulder. Hard. Leave a mark I want to keep. You try to rest your head and catch your breath and I won’t let you — I find your mouth again and kiss you filthy, tongues sliding, saliva stringing every time we adjust for air. 
-
-I proceed to shallow-press your thong into your pussy.
-
-Not inside you. Never inside you. Just the soaked fabric pushed gently, firmly, into your folds — molding the cotton to your cunt, tucking it against your clit, packing the wet heat of you back against itself. The pressure is shallow and filthy and exact. The pulse of my finger follows your lead as you continue to mount my thigh. Grind down. Press in. Grind down. Press in. chasing, and I’m giving you just enough to ruin you and not enough to finish it.
-
-My other hand shoves your top up. Both nipples are stiff enough to cut glass; I can feel them through everything. I tell you I want them in my mouth.
-
-“Soon,” you manage between breaths. It sounds like a plea.
-
-I can’t wait that long. I kiss down the side of your body, push your top higher, and take your left breast into my mouth. First just the soft skin underneath, sucking marks into it. Then I lick a slow wet stripe over your nipple and you moan loud enough that I almost glance around. I play with the piercing — tongue flicking it, teeth gently tugging — before I latch on properly and suck. Hard. Rhythmically. The way I’d suck your clit if I were on my knees. Your whole body goes taut. You stop breathing. When I pull off with a wet sound and reclaim your mouth you gasp like you’ve been underwater.
-
-You hug me, face buried in my neck. We stay like that for long minutes — my fingers still lazily stroking through your soaked folds, not building, just possessing, keeping you wet and open and aware of every nerve. Then you lift your head. Your eyes are dark, wrecked, shining.
-
-You’re parched. Mucosal membranes in full revolt. We somehow get into the car.
-
-The second the doors shut the air changes. Private. Dangerous.
-
-You’re on me before I fully sit back. Pinning — I barely track — and kissing me like the park was only the preview. Your words come out 
-wrecked and honest:
-
-“In what world wouldn’t I want to be kissed like that… in what world would I not want you touching me all over like that…”
-
-Your face, your throat, your chest, your arms are flushed deep. You look thoroughly used and we’ve barely started. That flushed, fucked-out, golden look. You pin me harder and the kiss turns feral — all tongue and the wet sounds of mouths that refuse to separate. (The pin actually hurts; my skin is caught between the seat and the door. I do not move. I would let you break a rib before I break this kiss. Eventually it frees itself. You never notice. I’m not sure you would have cared.)
-
-***
-
-Fast forward — I am about to drop you off. You ask if I want to come up. Yes, I reply. Excellent, you reply back. But parking… When I was about to let you out of the car, the way you proceeded to get out, but then quickly sat back and gave me a kiss saying see you soon… my heart melted.
-
-Fast forward… I had actually parked and was about to head over when you messaged that it’s late… so till next time.
-
-…where in this world of Waldo was the romantic spark missing?
-
-Sunday was a day of daggers. Truly messed-up morning. Then Late to you — dagger one. When I got to you it was great — so happy… I wanted to sweep you off your feet, take you right then and there… the whole gamut. But it was my first time in your inner sanctum and meeting Kumo and we had to get accustomed — it was an honor and I had to stay measured. The arepas — loved cooking with you… they turn out  hella good!! Only thing: they had avocados. I could have said something or not eaten them, but you put so much effort, you were so happy — I’d happily take the L to preserve that. It KO’d me… felt the energy completely draining and the onset of feeling loopy — dagger two. It also got a little overwhelming as the evening progressed with the vaping and you smoking the J - i thought you didn’t smoke. With each stare into your eyes, Celine when high was not the same Celine i knew — dagger three. Dr. J, just as we were winding up, sent me all the tracks (I have email timestamps if you don’t believe me)… but it was too late.
-
-You asked me about dating a white girl, that’s threw me as well. I would not do all this for nothing, It is not a problem. and it would be my responsibility no matter what to make sure that that never is a problem. 
-
-Originally I was going to be on-call at home, but it’d be dangerous to drive knowing what was happening. I went to the office slowly. I needed water before I KO’d but forgot my water bottle — fuck me. So I wanted to get a message out to you before I KO’d and it was not in the slightest the way I felt about you. I was able to briefly get some energy with the meatballs, drove home around 3:30am and then KO’d again. You have no idea how many times I wanted to kiss, touch, take you… that evening. I literally couldn’t physically know what was happening to me. During this time I saw you getting progressively annoyed. I was KO’d all Monday. I saw your message and was like faaak me. I can’t tell her what’s happening while being in this state. I worked from home on Tuesday, and finally got back to 100% Wednesday.
-
-…I’m sorry, if I made you feel undesired unwanted, not wanting to progress. It’s truly a misunderstanding Celine.
-
-
-
-
-
+Yes — you can pull GZERO Media programmatically, both on a cron schedule and ad-hoc. The site has no public RSS feed, but it exposes Google-News sitemaps and its `robots.txt` permits crawling everything except `/core/*`, `/r/*`, `/mnt/*`, and sponsored-post slugs — so a sitemap-driven scraper is the cleanest, most stable approach.[1]
+
+## What's available to pull
+
+| Section | URL path(s) | Sitemap signal |
+|---|---|---|
+| News | `/news/` | `sitemap_news.xml` (freshest, has `<news:publication_date>`) |
+| Analysis | `/news/analysis/`, `/analysis/` | `sitemap_sections.xml` |
+| What We're Watching | `/news/watching/` | `sitemap_news.xml` |
+| Graphic Truth | `/graphic-truth/`, `/tag/graphic-truth` | `sitemap_tags.xml` |
+| By Ian Bremmer | `/by-ian-bremmer/`, `/u/ianbremmer` | `sitemap_sections.xml` |
+| Hard Numbers | `/news/hard-numbers/`, `/tag/hard-numbers` | `sitemap_news.xml` |
+
+The `robots.txt` lists five sitemaps: `sitemap.xml`, `sitemap_sections.xml`, `sitemap_video.xml`, `sitemap_news.xml`, and `sitemap_tags.xml`. The news sitemap is the best primary source because it carries `<news:publication_date>` and `<news:title>` per URL, so you can filter by date and section without ever hitting the article pages.[1]
+
+## The approach
+
+1. **Read `sitemap_news.xml` first** — it's the freshest, most structured feed (publication date + title per item). Fall back to `sitemap.xml` if it's empty.
+2. **Filter by section** using the path prefixes in the table above.
+3. **Optionally fetch each article page** to pull `<title>`, `<meta name="description">`, Open Graph tags, and the first `<article>` body paragraphs.
+4. **Emit JSON or pretty-print** — pipe into a file, a webhook, Notion, Slack, etc.
+
+## The prototype
+
+I wrote a runnable `gzero_pull.py` (attached as a file) that does exactly this. It uses `requests` + `beautifulsoup4` if available, with stdlib `urllib` + `html.parser` fallbacks so it runs anywhere. Key bits:
+
+```bash
+# ad-hoc, sitemap metadata only (fast)
+python gzero_pull.py --sections news,hard-numbers --no-fetch
+
+# ad-hoc, with article bodies, since a date
+python gzero_pull.py --since 2026-08-01 --json out.json
+
+# cron — daily 07:00, archive by date
+0 7 * * * /usr/bin/python3 /path/to/gzero_pull.py --json /var/gzero/$(date +\%F).json
+```
+
+```
+#!/usr/bin/env python3
+"""
+gzero_pull.py — Pull GZERO Media sections (news, analysis, what we're watching,
+graphic truth, by Ian Bremmer, hard numbers) on a schedule or ad-hoc.
+
+USAGE
+  python gzero_pull.py                  # one-shot pull, print to stdout
+  python gzero_pull.py --json out.json   # write JSON
+  python gzero_pull.py --since 2026-08-01
+  python gzero_pull.py --sections news,hard-numbers
+  cron:  0 7 * * *  /usr/bin/python3 /path/to/gzero_pull.py --json /var/gzero/$(date +\%F).json
+
+STRATEGY
+  GZERO Media has no public RSS feed. robots.txt allows crawling everything
+  except /core/*, /r/*, /mnt/* and sponsored-post slugs. The site exposes
+  Google-News sitemaps (sitemap_news.xml, sitemap.xml, sitemap_sections.xml,
+  sitemap_tags.xml) which are the cheapest, most stable machine-readable source.
+  This script:
+    1. Reads sitemap_news.xml (most-recent items, includes <news:publication_date>).
+    2. Falls back to sitemap.xml if the news sitemap is empty/missing.
+    3. Filters by section slug prefix and optional --since date.
+    4. Optionally fetches each article page and extracts <title>, <meta name=description>,
+       Open Graph tags, and the first <article> body text.
+    5. Emits a list of dicts (JSON or pretty-printed).
+
+  Run with --no-fetch to skip article body fetching (fast, sitemap-only).
+
+DEPENDENCIES
+  pip install requests beautifulsoup4 lxml
+  (requests + bs4 are used only for convenience; stdlib urllib + html.parser
+   fallbacks are included so the script still runs without them.)
+"""
+
+from __future__ import annotations
+import argparse, json, sys, re, datetime, gzip, io, ssl
+from urllib.parse import urljoin, urlparse
+from html.parser import HTMLParser
+from xml.etree import ElementTree as ET
+
+try:
+    import requests
+    HAVE_REQUESTS = True
+except ImportError:
+    HAVE_REQUESTS = False
+
+try:
+    from bs4 import BeautifulSoup
+    HAVE_BS4 = True
+except ImportError:
+    HAVE_BS4 = False
+
+
+BASE = "https://www.gzeromedia.com"
+SITEMAPS = [
+    f"{BASE}/sitemap_news.xml",   # Google News sitemap (freshest)
+    f"{BASE}/sitemap.xml",        # full URL set
+    f"{BASE}/sitemap_sections.xml",
+]
+NS = {
+    "sm": "http://www.sitemaps.org/schemas/sitemap/0.9",
+    "news": "http://www.google.com/schemas/sitemap-news/0.9",
+}
+
+# Section slug prefixes — match these against <loc> paths.
+# Derived from observed site structure (gzeromedia.com/news/...,
+# /news/watching/, /news/hard-numbers/, /graphic-truth/, /by-ian-bremmer/, ...).
+SECTION_MAP = {
+    "news":              ["/news/"],
+    "analysis":          ["/news/analysis/", "/analysis/"],
+    "what-were-watching":["/news/watching/", "/what-were-watching"],
+    "graphic-truth":     ["/graphic-truth/", "/tag/graphic-truth", "/tag/the-graphic-truth"],
+    "by-ian-bremmer":    ["/by-ian-bremmer/", "/u/ianbremmer"],
+    "hard-numbers":      ["/news/hard-numbers/", "/tag/hard-numbers", "/hard-numbers"],
+}
+ALL_SECTIONS = list(SECTION_MAP.keys())
+
+
+def http_get(url: str, timeout: int = 30) -> str:
+    """GET with a desktop UA, gzip handling, stdlib fallback."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip",
+    }
+    if HAVE_REQUESTS:
+        r = requests.get(url, headers=headers, timeout=timeout)
+        r.raise_for_status()
+        return r.text
+    # stdlib fallback
+    import urllib.request
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, context=ctx, timeout=timeout) as r:
+        data = r.read()
+        if r.headers.get("Content-Encoding") == "gzip":
+            data = gzip.decompress(data)
+        return data.decode(r.headers.get_content_charset() or "utf-8", "replace")
+
+
+def parse_sitemap(url: str) -> list[dict]:
+    """Return list of {loc, lastmod, news_date, title} from a sitemap."""
+    try:
+        xml = http_get(url)
+    except Exception as e:
+        print(f"  ! sitemap {url}: {e}", file=sys.stderr)
+        return []
+    root = ET.fromstring(xml)
+    out = []
+    for url_el in root.findall("sm:url", NS):
+        loc = (url_el.findtext("sm:loc", default="", namespaces=NS) or "").strip()
+        if not loc:
+            continue
+        lastmod = (url_el.findtext("sm:lastmod", default="", namespaces=NS) or "").strip()
+        news_el = url_el.find("news:news", NS)
+        news_date = ""
+        news_title = ""
+        if news_el is not None:
+            news_date = (news_el.findtext("news:publication_date", default="", namespaces=NS) or "").strip()
+            news_title = (news_el.findtext("news:title", default="", namespaces=NS) or "").strip()
+        out.append({"loc": loc, "lastmod": lastmod,
+                    "news_date": news_date, "title": news_title})
+    return out
+
+
+def match_section(loc: str, prefixes: list[str]) -> bool:
+    path = urlparse(loc).path
+    return any(path.startswith(p) or p in path for p in prefixes)
+
+
+def filter_items(items: list[dict], sections: list[str], since: datetime.date | None):
+    keep = []
+    for it in items:
+        path = urlparse(it["loc"]).path
+        if sections and sections != ALL_SECTIONS:
+            if not any(match_section(it["loc"], SECTION_MAP[s]) for s in sections):
+                continue
+        date_str = it.get("news_date") or it.get("lastmod") or ""
+        d = None
+        if date_str:
+            try:
+                d = datetime.date.fromisoformat(date_str[:10])
+            except ValueError:
+                d = None
+        if since and d and d < since:
+            continue
+        it["section"] = next((s for s in sections if match_section(it["loc"], SECTION_MAP[s])), "other")
+        it["date"] = d.isoformat() if d else ""
+        keep.append(it)
+    return keep
+
+
+class _MetaParser(HTMLParser):
+    """Minimal stdlib extractor for <title>, meta description, og:*."""
+    def __init__(self):
+        super().__init__()
+        self.title = ""
+        self.meta = {}
+        self._in_title = False
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "title":
+            self._in_title = True
+        elif tag == "meta":
+            name = a.get("name") or a.get("property") or ""
+            if name:
+                self.meta[name.lower()] = a.get("content", "")
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self._in_title = False
+    def handle_data(self, data):
+        if self._in_title:
+            self.title += data
+
+
+def extract_article(loc: str) -> dict:
+    """Fetch one article page and pull out metadata + first paragraph(s)."""
+    try:
+        html = http_get(loc)
+    except Exception as e:
+        return {"error": str(e)}
+    if HAVE_BS4:
+        soup = BeautifulSoup(html, "lxml")
+        title = soup.title.string.strip() if soup.title and soup.title.string else ""
+        desc = (soup.find("meta", attrs={"name": "description"}) or {}).get("content", "")
+        og = {m.get("property", "").lower(): m.get("content", "")
+              for m in soup.find_all("meta") if m.get("property", "").startswith("og:")}
+        art = soup.find("article") or soup.find("main") or soup.body
+        paras = [p.get_text(" ", strip=True) for p in art.find_all("p")] if art else []
+        body = "\n\n".join(p for p in paras if len(p) > 40)[:4000]
+        return {"title": title, "description": desc, "og": og, "body": body}
+    # stdlib fallback
+    p = _MetaParser()
+    p.feed(html)
+    desc = p.meta.get("description", "")
+    og = {k: v for k, v in p.meta.items() if k.startswith("og:")}
+    # crude body extraction: first <p>...</p> blocks
+    paras = re.findall(r"<p[^>]*>(.*?)</p>", html, re.S)
+    body = "\n\n".join(re.sub(r"<[^>]+>", "", x).strip() for x in paras if len(x) > 80)[:4000]
+    return {"title": p.title, "description": desc, "og": og, "body": body}
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Pull GZERO Media sections.")
+    ap.add_argument("--sections", default=",".join(ALL_SECTIONS),
+                    help="comma list: " + ",".join(ALL_SECTIONS))
+    ap.add_argument("--since", help="YYYY-MM-DD; only items on/after this date")
+    ap.add_argument("--json", metavar="FILE", help="write JSON to FILE")
+    ap.add_argument("--no-fetch", action="store_true",
+                    help="skip article body fetching (sitemap metadata only)")
+    ap.add_argument("--limit", type=int, default=0, help="cap number of items")
+    args = ap.parse_args()
+
+    sections = [s.strip() for s in args.sections.split(",") if s.strip() in ALL_SECTIONS] or ALL_SECTIONS
+    since = datetime.date.fromisoformat(args.since) if args.since else None
+
+    print(f"# GZERO pull — sections={sections} since={since} fetch={'no' if args.no_fetch else 'yes'}",
+          file=sys.stderr)
+
+    # 1. gather URLs from sitemaps (dedup, freshest first)
+    seen, items = set(), []
+    for sm in SITEMAPS:
+        got = parse_sitemap(sm)
+        print(f"  sitemap {sm}: {len(got)} urls", file=sys.stderr)
+        for it in got:
+            if it["loc"] in seen:
+                continue
+            seen.add(it["loc"])
+            items.append(it)
+        if items:
+            break  # news sitemap is enough; fall through only if empty
+
+    items.sort(key=lambda x: x.get("news_date") or x.get("lastmod") or "", reverse=True)
+    items = filter_items(items, sections, since)
+    if args.limit:
+        items = items[: args.limit]
+    print(f"  matched {len(items)} items", file=sys.stderr)
+
+    # 2. optionally fetch each article body
+    if not args.no_fetch:
+        for i, it in enumerate(items, 1):
+            print(f"  [{i}/{len(items)}] {it['loc']}", file=sys.stderr)
+            it.update(extract_article(it["loc"]))
+
+    # 3. emit
+    if args.json:
+        with open(args.json, "w", encoding="utf-8") as f:
+            json.dump(items, f, ensure_ascii=False, indent=2)
+        print(f"  wrote {args.json}", file=sys.stderr)
+    else:
+        for it in items:
+            print(f"\n--- {it.get('section')} | {it.get('date')} ---")
+            print(f"URL:   {it['loc']}")
+            print(f"Title: {it.get('title') or it.get('og',{}).get('og:title','')}")
+            desc = it.get("description") or it.get("og",{}).get("og:description","")
+            if desc:
+                print(f"Desc:  {desc}")
+            if it.get("body"):
+                print("\n" + it["body"][:1200])
+
+
+if __name__ == "__main__":
+    main()
+```
+
+
+
+The script:
+- Deduplicates across sitemaps, sorts newest-first
+- Filters by `--sections` (comma list) and `--since YYYY-MM-DD`
+- `--no-fetch` skips article body extraction (sitemap metadata only, fast)
+- `--limit N` caps the item count
+- Writes JSON or prints to stdout
+
+## Cron vs. ad-hoc
+
+- **Cron**: GZERO publishes daily (GZERO Daily every weekday at 12 ET, Ian Bremmer's weekly column Wednesdays at 4 ET). A daily 07:00 ET cron with `--since $(date -d yesterday +%F)` captures everything new since the last run. The news sitemap updates as articles go live, so you won't miss same-day posts.[2][3]
+- **Ad-hoc**: Run the same script without `--since` for a full pull, or with a specific date range. The sitemap-only mode (`--no-fetch`) is cheap enough to run interactively anytime.
+
+## Caveats worth knowing
+
+- **No RSS**: GZERO's only syndicated feed is the podcast (`feeds.simplecast.com/ibBxsiVV`). Articles have no RSS; the sitemap is the next-best structured source.[4]
+- **Sitemap stability**: Sitemaps can lag by minutes to hours after publication. If you need real-time, pair the sitemap pull with a homepage/section-page HTML scrape as a secondary signal.
+- **JavaScript-rendered content**: Some section pages ("Popular", "Recent", "Load More") are client-rendered. The sitemap avoids this entirely — it lists every published URL regardless of how the page renders it.
+- **Rate limiting**: Be polite. The script makes one request per sitemap plus one per article body. If you fetch bodies, add a `time.sleep(1)` between article requests, or use `--no-fetch` for the cron and fetch bodies only on ad-hoc deep dives.
+- **Terms**: `robots.txt` permits this; GZERO's terms of service may restrict republication. Pulling for personal/internal use is fine; redistributing full article text would need permission.
+
+If you want, I can wire this into a specific destination — push results to a Notion database, post a Slack digest, or save to S3 — using the connectors available. Just say where you want the output to land.
+
+Sources
+[1] https://www.gzeromedia.com/robots.txt https://www.gzeromedia.com/robots.txt
+[2] Eurasia Group | GZERO Media to launch a weekly edition by Ian Bremmer of the rebranded GZERO Daily newsletter https://www.eurasiagroup.net/media/gzero-media-to-launch-a-weekly-edition-by-ian-bremmer-of-the-rebranded-gzero-daily-newsletter
+[3] Sign up for GZERO's newsletters https://www.gzeromedia.com/subscribe/
+[4] GZERO World with Ian Bremmer - Simplecast https://feeds.simplecast.com/ibBxsiVV
+[5] GZERO Media: Global politics, world news and analysis https://www.gzeromedia.com/
+[6] GZERO's news and analysis about global politics https://www.gzeromedia.com/news/
+[7] GZERO World with Ian Bremmer - Podnews https://podnews.net/podcast/i4rjy
+[8] Analysis https://www.gzeromedia.com/news/analysis/
+[9] GZERO Daily https://www.gzeromedia.com/u/gzerodaily
+[10] By Ian Bremmer https://www.gzeromedia.com/by-ian-bremmer/
+[11] Partnering with GZERO Media: Download our Media Kit https://www.gzeromedia.com/media-kit
+[12] Podcasts https://www.gzeromedia.com/podcast/
+[13] GZERO Media (@gzeromedia) / Posts ... https://x.com/gzeromedia
+[14] Free Web Scraping Tool – Scrape Any Website Online | OpenGraph.io https://www.opengraph.io/web-scraping-tool
+[15] Free URL Extractor — Extract All Links from Any Website ... https://simplescraper.io/extracturls
+[16] Google News Sitemaps https://www.google.com/schemas/sitemap-news/0.9/
+[17] Announcing GZERO Daily and Ian Bremmer's new weekly newsletter https://www.gzeromedia.com/by-ian-bremmer/announcing-gzero-daily-and-ian-bremmers-new-weekly-newsletter
+[18] Thanks for subscribing to ... https://www.gzeromedia.com/subscribe/thanks-for-subscribing-to-gzeros-newsletters
+[19] Ian Bremmer - GZERO Media https://www.gzeromedia.com/u/ianbremmer
+[20] gzero daily newsletter news - GZERO Media https://www.gzeromedia.com/tag/gzero-daily-newsletter
+[21] Graphic Truth | Infographics https://www.gzeromedia.com/graphic-truth/
+[22] Russia seeks state-owned WhatsApp alternative, Argentina ... https://www.gzeromedia.com/news/watching/what-were-watching-russia-seeks-state-owned-whatsapp-alternative-argentina-advances-mileis-labor-reforms-mixed-messages-on-el-paso-airport-closure
+[23] Honduras' new leader takes office, Trump threatens Iran ... https://www.gzeromedia.com/news/watching/what-were-watching-honduras-new-leader-takes-office-trump-threatens-iran-again-winter-olympics-to-get-ice-y
+[24] Graphic Truth news https://www.gzeromedia.com/tag/graphic-truth
+[25] What We're Watching & What We're Ignoring https://www.gzeromedia.com/what-were-watching-what-were-ignoring-2629708830
+[26] Graphic Truth: Is government making peoples' lives worse? https://www.gzeromedia.com/graphic-truth-how-policies-will-impact-future-generations
+[27] Can Trump's executive order lower drug prices? https://www.gzeromedia.com/graphic-truth/1-story-3-numbers-can-trump-s-executive-order-lower-drug-prices
+[28] What We're Watching - GZERO Media https://www.gzeromedia.com/news/watching/
+[29] Hard Numbers: Israel arrests violent settlers, US House ... https://www.gzeromedia.com/news/hard-numbers/hard-numbers-israel-arrests-violent-settlers-us-house-ends-extended-recess-botswana-seeks-majority-de-beers-more
+[30] Spain-Gibraltar border comes crashing down, US and Iran ... https://www.gzeromedia.com/news/watching/spain-gibraltar-border-comes-crashing-down-us-and-iran-enter-shaky-equilibrium-mexicos-sheinbaum-finally-challenges-an-ice-killing
+[31] Modi's election triumph, US-Swiss tariff deal, Assad ally captured https://www.gzeromedia.com/news/hard-numbers/indias-modi-has-excellent-election-day-us-agrees-to-cut-swiss-tariffs-12-year-manhunt-for-assad-ally-ends
+[32] What We’re Watching: Iran threatens another waterway, & More https://www.gzeromedia.com/news/watching/iran-threatens-another-waterway-guyana-sees-economic-boom-imf-warns-of-economic-impact-from-middle-east-conflict
+[33] Four numbers you need to know today https://www.gzeromedia.com/news/hard-numbers/hard-numbers-gunfight-on-cubas-shores-thousands-die-taking-perilous-migration-routes-hong-kong-democracy-activist-wins-one-appeal-greenland-spat-boosts-danish-incumbents
+[34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
+[35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
