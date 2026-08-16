@@ -6127,6 +6127,7 @@ OSFI DSB Cut: 3.5% → 3.0% (regulatory event, June 19, 2026)
 
 ### Multi-Hop Reasoning Path
 
+<<<<<<< HEAD
 ```
 Our Corporate Loan Portfolio (all sectors)
     │
@@ -6347,7 +6348,70 @@ To support these golden queries, your ontology should include at minimum:
 - Regulatory signals: Event-driven (OSFI quarterly releases, CSA updates)
 
 ---
+=======
+if __name__ == "__main__":
+    main()
+```
+>>>>>>> 60765dc... Update daily.md
 
 *This document serves as the golden query reference for showcasing the knowledge graph's multi-hop reasoning capabilities to the CEO and board. Each query is designed to be runnable against the daily-refreshed graph and to produce an explainable reasoning path from source signal to executive decision.*
 
 
+The script:
+- Deduplicates across sitemaps, sorts newest-first
+- Filters by `--sections` (comma list) and `--since YYYY-MM-DD`
+- `--no-fetch` skips article body extraction (sitemap metadata only, fast)
+- `--limit N` caps the item count
+- Writes JSON or prints to stdout
+
+## Cron vs. ad-hoc
+
+- **Cron**: GZERO publishes daily (GZERO Daily every weekday at 12 ET, Ian Bremmer's weekly column Wednesdays at 4 ET). A daily 07:00 ET cron with `--since $(date -d yesterday +%F)` captures everything new since the last run. The news sitemap updates as articles go live, so you won't miss same-day posts.[2][3]
+- **Ad-hoc**: Run the same script without `--since` for a full pull, or with a specific date range. The sitemap-only mode (`--no-fetch`) is cheap enough to run interactively anytime.
+
+## Caveats worth knowing
+
+- **No RSS**: GZERO's only syndicated feed is the podcast (`feeds.simplecast.com/ibBxsiVV`). Articles have no RSS; the sitemap is the next-best structured source.[4]
+- **Sitemap stability**: Sitemaps can lag by minutes to hours after publication. If you need real-time, pair the sitemap pull with a homepage/section-page HTML scrape as a secondary signal.
+- **JavaScript-rendered content**: Some section pages ("Popular", "Recent", "Load More") are client-rendered. The sitemap avoids this entirely — it lists every published URL regardless of how the page renders it.
+- **Rate limiting**: Be polite. The script makes one request per sitemap plus one per article body. If you fetch bodies, add a `time.sleep(1)` between article requests, or use `--no-fetch` for the cron and fetch bodies only on ad-hoc deep dives.
+- **Terms**: `robots.txt` permits this; GZERO's terms of service may restrict republication. Pulling for personal/internal use is fine; redistributing full article text would need permission.
+
+If you want, I can wire this into a specific destination — push results to a Notion database, post a Slack digest, or save to S3 — using the connectors available. Just say where you want the output to land.
+
+Sources
+[1] https://www.gzeromedia.com/robots.txt https://www.gzeromedia.com/robots.txt
+[2] Eurasia Group | GZERO Media to launch a weekly edition by Ian Bremmer of the rebranded GZERO Daily newsletter https://www.eurasiagroup.net/media/gzero-media-to-launch-a-weekly-edition-by-ian-bremmer-of-the-rebranded-gzero-daily-newsletter
+[3] Sign up for GZERO's newsletters https://www.gzeromedia.com/subscribe/
+[4] GZERO World with Ian Bremmer - Simplecast https://feeds.simplecast.com/ibBxsiVV
+[5] GZERO Media: Global politics, world news and analysis https://www.gzeromedia.com/
+[6] GZERO's news and analysis about global politics https://www.gzeromedia.com/news/
+[7] GZERO World with Ian Bremmer - Podnews https://podnews.net/podcast/i4rjy
+[8] Analysis https://www.gzeromedia.com/news/analysis/
+[9] GZERO Daily https://www.gzeromedia.com/u/gzerodaily
+[10] By Ian Bremmer https://www.gzeromedia.com/by-ian-bremmer/
+[11] Partnering with GZERO Media: Download our Media Kit https://www.gzeromedia.com/media-kit
+[12] Podcasts https://www.gzeromedia.com/podcast/
+[13] GZERO Media (@gzeromedia) / Posts ... https://x.com/gzeromedia
+[14] Free Web Scraping Tool – Scrape Any Website Online | OpenGraph.io https://www.opengraph.io/web-scraping-tool
+[15] Free URL Extractor — Extract All Links from Any Website ... https://simplescraper.io/extracturls
+[16] Google News Sitemaps https://www.google.com/schemas/sitemap-news/0.9/
+[17] Announcing GZERO Daily and Ian Bremmer's new weekly newsletter https://www.gzeromedia.com/by-ian-bremmer/announcing-gzero-daily-and-ian-bremmers-new-weekly-newsletter
+[18] Thanks for subscribing to ... https://www.gzeromedia.com/subscribe/thanks-for-subscribing-to-gzeros-newsletters
+[19] Ian Bremmer - GZERO Media https://www.gzeromedia.com/u/ianbremmer
+[20] gzero daily newsletter news - GZERO Media https://www.gzeromedia.com/tag/gzero-daily-newsletter
+[21] Graphic Truth | Infographics https://www.gzeromedia.com/graphic-truth/
+[22] Russia seeks state-owned WhatsApp alternative, Argentina ... https://www.gzeromedia.com/news/watching/what-were-watching-russia-seeks-state-owned-whatsapp-alternative-argentina-advances-mileis-labor-reforms-mixed-messages-on-el-paso-airport-closure
+[23] Honduras' new leader takes office, Trump threatens Iran ... https://www.gzeromedia.com/news/watching/what-were-watching-honduras-new-leader-takes-office-trump-threatens-iran-again-winter-olympics-to-get-ice-y
+[24] Graphic Truth news https://www.gzeromedia.com/tag/graphic-truth
+[25] What We're Watching & What We're Ignoring https://www.gzeromedia.com/what-were-watching-what-were-ignoring-2629708830
+[26] Graphic Truth: Is government making peoples' lives worse? https://www.gzeromedia.com/graphic-truth-how-policies-will-impact-future-generations
+[27] Can Trump's executive order lower drug prices? https://www.gzeromedia.com/graphic-truth/1-story-3-numbers-can-trump-s-executive-order-lower-drug-prices
+[28] What We're Watching - GZERO Media https://www.gzeromedia.com/news/watching/
+[29] Hard Numbers: Israel arrests violent settlers, US House ... https://www.gzeromedia.com/news/hard-numbers/hard-numbers-israel-arrests-violent-settlers-us-house-ends-extended-recess-botswana-seeks-majority-de-beers-more
+[30] Spain-Gibraltar border comes crashing down, US and Iran ... https://www.gzeromedia.com/news/watching/spain-gibraltar-border-comes-crashing-down-us-and-iran-enter-shaky-equilibrium-mexicos-sheinbaum-finally-challenges-an-ice-killing
+[31] Modi's election triumph, US-Swiss tariff deal, Assad ally captured https://www.gzeromedia.com/news/hard-numbers/indias-modi-has-excellent-election-day-us-agrees-to-cut-swiss-tariffs-12-year-manhunt-for-assad-ally-ends
+[32] What We’re Watching: Iran threatens another waterway, & More https://www.gzeromedia.com/news/watching/iran-threatens-another-waterway-guyana-sees-economic-boom-imf-warns-of-economic-impact-from-middle-east-conflict
+[33] Four numbers you need to know today https://www.gzeromedia.com/news/hard-numbers/hard-numbers-gunfight-on-cubas-shores-thousands-die-taking-perilous-migration-routes-hong-kong-democracy-activist-wins-one-appeal-greenland-spat-boosts-danish-incumbents
+[34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
+[35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
