@@ -5513,6 +5513,7 @@ I wrote a runnable `gzero_pull.py` (attached as a file) that does exactly this. 
 ```bash
 # ad-hoc, sitemap metadata only (fast)
 python gzero_pull.py --sections news,hard-numbers --no-fetch
+<<<<<<< HEAD
 
 # ad-hoc, with article bodies, since a date
 python gzero_pull.py --since 2026-08-01 --json out.json
@@ -6323,6 +6324,278 @@ Client Net-Zero Commitments (corporate disclosures)
 ## Design Principles for Your Knowledge Graph Schema
 
 To support these golden queries, your ontology should include at minimum:
+=======
+
+# ad-hoc, with article bodies, since a date
+python gzero_pull.py --since 2026-08-01 --json out.json
+
+# cron — daily 07:00, archive by date
+0 7 * * * /usr/bin/python3 /path/to/gzero_pull.py --json /var/gzero/$(date +\%F).json
+```
+
+```
+#!/usr/bin/env python3
+"""
+gzero_pull.py — Pull GZERO Media sections (news, analysis, what we're watching,
+graphic truth, by Ian Bremmer, hard numbers) on a schedule or ad-hoc.
+
+USAGE
+  python gzero_pull.py                  # one-shot pull, print to stdout
+  python gzero_pull.py --json out.json   # write JSON
+  python gzero_pull.py --since 2026-08-01
+  python gzero_pull.py --sections news,hard-numbers
+  cron:  0 7 * * *  /usr/bin/python3 /path/to/gzero_pull.py --json /var/gzero/$(date +\%F).json
+
+STRATEGY
+  GZERO Media has no public RSS feed. robots.txt allows crawling everything
+  except /core/*, /r/*, /mnt/* and sponsored-post slugs. The site exposes
+  Google-News sitemaps (sitemap_news.xml, sitemap.xml, sitemap_sections.xml,
+  sitemap_tags.xml) which are the cheapest, most stable machine-readable source.
+  This script:
+    1. Reads sitemap_news.xml (most-recent items, includes <news:publication_date>).
+    2. Falls back to sitemap.xml if the news sitemap is empty/missing.
+    3. Filters by section slug prefix and optional --since date.
+    4. Optionally fetches each article page and extracts <title>, <meta name=description>,
+       Open Graph tags, and the first <article> body text.
+    5. Emits a list of dicts (JSON or pretty-printed).
+
+  Run with --no-fetch to skip article body fetching (fast, sitemap-only).
+
+DEPENDENCIES
+  pip install requests beautifulsoup4 lxml
+  (requests + bs4 are used only for convenience; stdlib urllib + html.parser
+   fallbacks are included so the script still runs without them.)
+"""
+
+from __future__ import annotations
+import argparse, json, sys, re, datetime, gzip, io, ssl
+from urllib.parse import urljoin, urlparse
+from html.parser import HTMLParser
+from xml.etree import ElementTree as ET
+
+try:
+    import requests
+    HAVE_REQUESTS = True
+except ImportError:
+    HAVE_REQUESTS = False
+
+try:
+    from bs4 import BeautifulSoup
+    HAVE_BS4 = True
+except ImportError:
+    HAVE_BS4 = False
+
+
+BASE = "https://www.gzeromedia.com"
+SITEMAPS = [
+    f"{BASE}/sitemap_news.xml",   # Google News sitemap (freshest)
+    f"{BASE}/sitemap.xml",        # full URL set
+    f"{BASE}/sitemap_sections.xml",
+]
+NS = {
+    "sm": "http://www.sitemaps.org/schemas/sitemap/0.9",
+    "news": "http://www.google.com/schemas/sitemap-news/0.9",
+}
+
+# Section slug prefixes — match these against <loc> paths.
+# Derived from observed site structure (gzeromedia.com/news/...,
+# /news/watching/, /news/hard-numbers/, /graphic-truth/, /by-ian-bremmer/, ...).
+SECTION_MAP = {
+    "news":              ["/news/"],
+    "analysis":          ["/news/analysis/", "/analysis/"],
+    "what-were-watching":["/news/watching/", "/what-were-watching"],
+    "graphic-truth":     ["/graphic-truth/", "/tag/graphic-truth", "/tag/the-graphic-truth"],
+    "by-ian-bremmer":    ["/by-ian-bremmer/", "/u/ianbremmer"],
+    "hard-numbers":      ["/news/hard-numbers/", "/tag/hard-numbers", "/hard-numbers"],
+}
+ALL_SECTIONS = list(SECTION_MAP.keys())
+
+
+def http_get(url: str, timeout: int = 30) -> str:
+    """GET with a desktop UA, gzip handling, stdlib fallback."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip",
+    }
+    if HAVE_REQUESTS:
+        r = requests.get(url, headers=headers, timeout=timeout)
+        r.raise_for_status()
+        return r.text
+    # stdlib fallback
+    import urllib.request
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, context=ctx, timeout=timeout) as r:
+        data = r.read()
+        if r.headers.get("Content-Encoding") == "gzip":
+            data = gzip.decompress(data)
+        return data.decode(r.headers.get_content_charset() or "utf-8", "replace")
+
+
+def parse_sitemap(url: str) -> list[dict]:
+    """Return list of {loc, lastmod, news_date, title} from a sitemap."""
+    try:
+        xml = http_get(url)
+    except Exception as e:
+        print(f"  ! sitemap {url}: {e}", file=sys.stderr)
+        return []
+    root = ET.fromstring(xml)
+    out = []
+    for url_el in root.findall("sm:url", NS):
+        loc = (url_el.findtext("sm:loc", default="", namespaces=NS) or "").strip()
+        if not loc:
+            continue
+        lastmod = (url_el.findtext("sm:lastmod", default="", namespaces=NS) or "").strip()
+        news_el = url_el.find("news:news", NS)
+        news_date = ""
+        news_title = ""
+        if news_el is not None:
+            news_date = (news_el.findtext("news:publication_date", default="", namespaces=NS) or "").strip()
+            news_title = (news_el.findtext("news:title", default="", namespaces=NS) or "").strip()
+        out.append({"loc": loc, "lastmod": lastmod,
+                    "news_date": news_date, "title": news_title})
+    return out
+
+
+def match_section(loc: str, prefixes: list[str]) -> bool:
+    path = urlparse(loc).path
+    return any(path.startswith(p) or p in path for p in prefixes)
+
+
+def filter_items(items: list[dict], sections: list[str], since: datetime.date | None):
+    keep = []
+    for it in items:
+        path = urlparse(it["loc"]).path
+        if sections and sections != ALL_SECTIONS:
+            if not any(match_section(it["loc"], SECTION_MAP[s]) for s in sections):
+                continue
+        date_str = it.get("news_date") or it.get("lastmod") or ""
+        d = None
+        if date_str:
+            try:
+                d = datetime.date.fromisoformat(date_str[:10])
+            except ValueError:
+                d = None
+        if since and d and d < since:
+            continue
+        it["section"] = next((s for s in sections if match_section(it["loc"], SECTION_MAP[s])), "other")
+        it["date"] = d.isoformat() if d else ""
+        keep.append(it)
+    return keep
+
+
+class _MetaParser(HTMLParser):
+    """Minimal stdlib extractor for <title>, meta description, og:*."""
+    def __init__(self):
+        super().__init__()
+        self.title = ""
+        self.meta = {}
+        self._in_title = False
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "title":
+            self._in_title = True
+        elif tag == "meta":
+            name = a.get("name") or a.get("property") or ""
+            if name:
+                self.meta[name.lower()] = a.get("content", "")
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self._in_title = False
+    def handle_data(self, data):
+        if self._in_title:
+            self.title += data
+
+
+def extract_article(loc: str) -> dict:
+    """Fetch one article page and pull out metadata + first paragraph(s)."""
+    try:
+        html = http_get(loc)
+    except Exception as e:
+        return {"error": str(e)}
+    if HAVE_BS4:
+        soup = BeautifulSoup(html, "lxml")
+        title = soup.title.string.strip() if soup.title and soup.title.string else ""
+        desc = (soup.find("meta", attrs={"name": "description"}) or {}).get("content", "")
+        og = {m.get("property", "").lower(): m.get("content", "")
+              for m in soup.find_all("meta") if m.get("property", "").startswith("og:")}
+        art = soup.find("article") or soup.find("main") or soup.body
+        paras = [p.get_text(" ", strip=True) for p in art.find_all("p")] if art else []
+        body = "\n\n".join(p for p in paras if len(p) > 40)[:4000]
+        return {"title": title, "description": desc, "og": og, "body": body}
+    # stdlib fallback
+    p = _MetaParser()
+    p.feed(html)
+    desc = p.meta.get("description", "")
+    og = {k: v for k, v in p.meta.items() if k.startswith("og:")}
+    # crude body extraction: first <p>...</p> blocks
+    paras = re.findall(r"<p[^>]*>(.*?)</p>", html, re.S)
+    body = "\n\n".join(re.sub(r"<[^>]+>", "", x).strip() for x in paras if len(x) > 80)[:4000]
+    return {"title": p.title, "description": desc, "og": og, "body": body}
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Pull GZERO Media sections.")
+    ap.add_argument("--sections", default=",".join(ALL_SECTIONS),
+                    help="comma list: " + ",".join(ALL_SECTIONS))
+    ap.add_argument("--since", help="YYYY-MM-DD; only items on/after this date")
+    ap.add_argument("--json", metavar="FILE", help="write JSON to FILE")
+    ap.add_argument("--no-fetch", action="store_true",
+                    help="skip article body fetching (sitemap metadata only)")
+    ap.add_argument("--limit", type=int, default=0, help="cap number of items")
+    args = ap.parse_args()
+
+    sections = [s.strip() for s in args.sections.split(",") if s.strip() in ALL_SECTIONS] or ALL_SECTIONS
+    since = datetime.date.fromisoformat(args.since) if args.since else None
+
+    print(f"# GZERO pull — sections={sections} since={since} fetch={'no' if args.no_fetch else 'yes'}",
+          file=sys.stderr)
+
+    # 1. gather URLs from sitemaps (dedup, freshest first)
+    seen, items = set(), []
+    for sm in SITEMAPS:
+        got = parse_sitemap(sm)
+        print(f"  sitemap {sm}: {len(got)} urls", file=sys.stderr)
+        for it in got:
+            if it["loc"] in seen:
+                continue
+            seen.add(it["loc"])
+            items.append(it)
+        if items:
+            break  # news sitemap is enough; fall through only if empty
+
+    items.sort(key=lambda x: x.get("news_date") or x.get("lastmod") or "", reverse=True)
+    items = filter_items(items, sections, since)
+    if args.limit:
+        items = items[: args.limit]
+    print(f"  matched {len(items)} items", file=sys.stderr)
+
+    # 2. optionally fetch each article body
+    if not args.no_fetch:
+        for i, it in enumerate(items, 1):
+            print(f"  [{i}/{len(items)}] {it['loc']}", file=sys.stderr)
+            it.update(extract_article(it["loc"]))
+
+    # 3. emit
+    if args.json:
+        with open(args.json, "w", encoding="utf-8") as f:
+            json.dump(items, f, ensure_ascii=False, indent=2)
+        print(f"  wrote {args.json}", file=sys.stderr)
+    else:
+        for it in items:
+            print(f"\n--- {it.get('section')} | {it.get('date')} ---")
+            print(f"URL:   {it['loc']}")
+            print(f"Title: {it.get('title') or it.get('og',{}).get('og:title','')}")
+            desc = it.get("description") or it.get("og",{}).get("og:description","")
+            if desc:
+                print(f"Desc:  {desc}")
+            if it.get("body"):
+                print("\n" + it["body"][:1200])
+>>>>>>> 60765dc... Update daily.md
 
 ### Core Entity Types
 - **Events:** Policy changes, geopolitical conflicts, regulatory actions, market shocks
@@ -6331,11 +6604,17 @@ To support these golden queries, your ontology should include at minimum:
 - **Metrics:** Rates, prices, ratios, covenant terms, capital requirements
 - **Time:** Temporal nodes for forecasts, maturities, and scenario timelines
 
+<<<<<<< HEAD
 ### Key Relationship Types
 - `affects` / `impacts` / `disrupts` (event → entity)
 - `has_exposure` / `supplied_by` / `owned_by` (entity → entity)
 - `feeds_into` / `flows_to` / `aggregates` (metric → metric)
 - `regulated_by` / `on_sanctions_list` / `committed_to` (entity → framework)
+=======
+if __name__ == "__main__":
+    main()
+```
+>>>>>>> 60765dc... Update daily.md
 
 ### Standards Alignment
 - **FIBO** (Financial Industry Business Ontology) for financial instrument and entity modeling
@@ -6350,6 +6629,7 @@ To support these golden queries, your ontology should include at minimum:
 - Financial signals: Daily (internal loan book, market prices, peer filings)
 - Regulatory signals: Event-driven (OSFI quarterly releases, CSA updates)
 
+<<<<<<< HEAD
 ---
 <<<<<<< HEAD
 =======
@@ -6364,6 +6644,8 @@ if __name__ == "__main__":
 
 
 <<<<<<< HEAD
+=======
+>>>>>>> 60765dc... Update daily.md
 The script:
 - Deduplicates across sitemaps, sorts newest-first
 - Filters by `--sections` (comma list) and `--since YYYY-MM-DD`
@@ -6422,5 +6704,8 @@ Sources
 [33] Four numbers you need to know today https://www.gzeromedia.com/news/hard-numbers/hard-numbers-gunfight-on-cubas-shores-thousands-die-taking-perilous-migration-routes-hong-kong-democracy-activist-wins-one-appeal-greenland-spat-boosts-danish-incumbents
 [34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
 [35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
+<<<<<<< HEAD
 =======
 >>>>>>> f4d3c8c... Update daily.md
+=======
+>>>>>>> 60765dc... Update daily.md
