@@ -5521,7 +5521,7 @@ python gzero_pull.py --since 2026-08-01 --json out.json
 0 7 * * * /usr/bin/python3 /path/to/gzero_pull.py --json /var/gzero/$(date +\%F).json
 ```
 
-```
+```python
 #!/usr/bin/env python3
 """
 gzero_pull.py — Pull GZERO Media sections (news, analysis, what we're watching,
