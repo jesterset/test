@@ -5849,3 +5849,505 @@ Sources
 [33] Four numbers you need to know today https://www.gzeromedia.com/news/hard-numbers/hard-numbers-gunfight-on-cubas-shores-thousands-die-taking-perilous-migration-routes-hong-kong-democracy-activist-wins-one-appeal-greenland-spat-boosts-danish-incumbents
 [34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
 [35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
+
+
+
+
+
+
+
+
+I've created a comprehensive golden query reference document for you. Here's the summary.
+
+## What Makes a Golden Query
+
+A golden query demonstrates value that's impossible to obtain from siloed data sources or simple lookups. The criteria: it traverses **at least two of your four signal domains** (macroeconomic, microeconomic, geopolitical, financial), discovers **hidden relationships** that no single dashboard surfaces, produces an **explainable reasoning path** citeable to source data, and maps directly to a **board-level decision**.
+
+## The Eight Golden Queries
+
+| # | Query | Domains Traversed | Hops | Insight Type |
+|---|-------|-------------------|------|-------------|
+| 1 | US tariff on steel/aluminum → our corporate loan exposure → Q3 credit loss provisions | Geopolitical → Micro → Financial | 4 | Cascade impact quantification |
+| 2 | Iran/Middle East conflict → oil price → counterparty covenant breaches | Geopolitical → Macro → Micro → Financial | 4 | Bidirectional price impact |
+| 3 | BoC rate hold → housing stress → CRE exposure → OSFI DSB position | Macro → Micro → Financial → Regulatory | 4 | Causal chain to regulatory capital |
+| 4 | OSFI DSB cut (3.5%→3.0%, ~$74B freed) → our lending capacity vs. Big Six peers → deployment strategy | Regulatory → Financial → Micro → Strategic | 4 | Peer-aware strategic optimization |
+| 5 | Hidden supply chain concentration across "diversified" portfolio sectors | Financial → Micro → Micro → Financial | 4 | Hidden relationship discovery |
+| 6 | Client → ownership chain → shared beneficial owner → sanctioned entity (6-hop) | Financial → Corporate → Corporate → Regulatory | 6 | Deep entity resolution |
+| 7 | Inflation path (3%→2.5%) → deposit beta → loan repricing → NIM trajectory | Macro → Macro → Micro → Financial | 4 | Behavioral + financial synthesis |
+| 8 | Client net-zero commitment vs. actual operations/supply chains → greenwashing risk | Corporate → Micro → Regulatory → Financial | 4 | Commitment-action gap detection |
+
+## Why These Showcase Multi-Hop Reasoning
+
+Each query demonstrates a different strength of knowledge graphs over traditional reporting:
+
+**Query 5 (Hidden Supply Chain)** is the quintessential example. Sector-level reporting shows a steel buyer (auto parts), a construction firm, and a machinery company as three separate, well-diversified exposures across different NAICS codes. The graph reveals they all depend on the same supplier — a $680M hidden concentration that no risk taxonomy flags. This is emergent structure, not explicit modeling.[1]
+
+**Query 3 (Rate → Capital Buffer)** traverses four domains in a single chain: monetary policy → housing market → credit portfolio → regulatory capital. The graph holds OSFI's June 2026 DSB cut to 3.0% as a node, freeing ~$74B across the Big Six, enabling the CEO to ask whether a specific stress scenario erodes that newly freed capacity. No existing Canadian bank reporting system produces this end-to-end view.[2][3]
+
+**Query 6 (Sanctions/AML)** finds a 6-hop connection from a client entity to a sanctioned individual through ownership chains, joint ventures, and shared directors — something standard KYC name-matching completely misses. This aligns with what FIBO and knowledge graph practitioners describe as automated reasoning to detect hidden ownership structures and entity relationships.[4][5]
+
+**Query 4 (Regulatory → Competitive)** holds peer-specific context as interconnected nodes: TD's AML remediation overhang, National Bank's 4% developer loan concentration vs. <1% at other Big Six banks, and government signaling of AI/resources as deployment priorities. The CEO sees not just "we have more capital" but the triple intersection of freed capacity + peer constraints + policy direction.[6]
+
+## Schema Design Implications
+
+To support these queries, your ontology needs entity types covering **events** (policy changes, conflicts, regulatory actions), **entities** (companies, counterparties, regulators, instruments), **relationships** (ownership, exposure, supply, sanctions), and **temporal nodes** (forecasts, maturities, scenarios). Align with **FIBO** for financial instrument modeling, **OSFI CAR Guidelines** for regulatory capital nodes, and **NAICS/HS codes** for industry classification traversal.[5][7][8]
+
+The full document with detailed reasoning paths, hop-by-hop tables, and source signal mappings for each query is in the file panel as `golden_queries_canadian_financial_kg.md`.
+
+Sources
+[1] Knowledge Graph in Finance Explained, Use Cases and Benefits https://www.quinnox.com/blogs/knowledge-graph-in-finance/
+[2] Canada's banking regulator lowers stability buffer for big ... https://www.reuters.com/business/canadas-banking-regulator-lowers-stability-buffer-big-banks-allowing-them-lend-2026-06-19/
+[3] OSFI cuts stability buffer, freeing $74 billion for Canada's big banks https://www.wealthprofessional.ca/news/industry-news/osfi-cuts-stability-buffer-freeing-74-billion-for-canadas-big-banks/392808
+[4] Ontologies & Knowledge Graphs: Practical Examples in Financials https://graphwise.ai/blog/the-power-of-ontologies-and-knowledge-graphs-practical-examples-from-the-financial-industry/
+[5] FIBO - Finance Industry - EDM Council https://edmcouncil.org/frameworks/industry-models/fibo/
+[6] Canada's banks doubled loans to real estate developers - LinkedIn https://www.linkedin.com/posts/veritas-investment-research_builders-taking-on-more-debt-as-some-in-residential-activity-7339359538187292672-ylnO
+[7] Capital Adequacy Requirements (CAR) (2026) – Chapter 9 https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/capital-adequacy-requirements-car-2026-chapter-9-market-risk
+[8] Capital Adequacy Requirements (CAR) – Guideline (2026) https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/capital-adequacy-requirements-car-guideline-2026
+[9] Global economy https://www.bankofcanada.ca/publications/mpr/mpr-2025-10-29/global-economy/
+[10] Overview - Bank of Canada https://www.bankofcanada.ca/publications/mpr/mpr-2026-07-15/overview/
+[11] Outlook https://www.bankofcanada.ca/publications/mpr/mpr-2026-04-29/canadian-outlook/
+[12] Current conditions https://www.bankofcanada.ca/publications/mpr/mpr-2026-07-15/canadian-conditions/
+[13] Outlook https://www.bankofcanada.ca/publications/mpr/mpr-2026-07-15/canadian-outlook/
+[14] Overview https://www.bankofcanada.ca/publications/mpr/mpr-2025-01-29/
+[15] Risks https://www.bankofcanada.ca/publications/mpr/mpr-2026-01-28/risks/
+[16] Appendix: Potential output and the nominal neutral rate of ... https://www.bankofcanada.ca/publications/mpr/mpr-2025-04-16/appendix/
+[17] Canada's monetary policy framework in a world of supply- ... https://www.bankofcanada.ca/2026/03/canadas-monetary-policy-framework-world-supply-driven-trade-offs/
+[18] Monetary Policy Decision Press Conference Opening Statement https://www.bankofcanada.ca/2026/03/opening-statement-2026-03-18/
+[19] How can knowledge graphs be applied in the financial industry? https://milvus.io/ai-quick-reference/how-can-knowledge-graphs-be-applied-in-the-financial-industry
+[20] The three signals that point to... https://www.digetiers.com/en/insights/library/knowledge-graph-use-cases-enterprise
+[21] Chapter 1 – Overview of Risk-based Capital Requirements https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/capital-adequacy-requirements-car-2026-chapter-1-overview-risk-based-capital-requirements
+[22] Final Capital Adequacy Requirements Guideline (2026) https://www.osfi-bsif.gc.ca/en/news/backgrounder-final-capital-adequacy-requirements-guideline-2026
+[23] Capital Adequacy Requirements Guideline (2026) – Letter https://www.osfi-bsif.gc.ca/en/guidance/guidance-library/capital-adequacy-requirements-guideline-2026-letter
+[24] Benchmarking Canadian Bank Capital Ratios to ... https://www.osfi-bsif.gc.ca/en/about-osfi/reports-publications/benchmarking-canadian-bank-capital-ratios-international-peers-technical-note-february-2026
+[25] OSFI's Quarterly Release: strengthening resilience while ... https://www.osfi-bsif.gc.ca/en/news/osfis-quarterly-release-strengthening-resilience-while-reducing-complexity
+[26] OSFI's Quarterly Release: Smart oversight to support ... https://www.osfi-bsif.gc.ca/en/news/osfis-quarterly-release-smart-oversight-support-economic-growth
+[27] Final Liquidity Adequacy Requirements Guideline (2026) - OSFI https://www.osfi-bsif.gc.ca/en/news/backgrounder-final-liquidity-adequacy-requirements-guideline-2026
+[28] Applying Multi-Hop Reasoning to FIBO Financial Knowledge Graph https://www.linkedin.com/posts/akash-g-7a5224246_knowledgegraphs-graphai-neo4j-activity-7458945754846371840-VFgM
+[29] Multi-Hop Reasoning Over Knowledge Graphs in RAG https://typegraph.ai/blog/multi-hop-reasoning-knowledge-graph-rag
+[30] RAG Series (16): Graph RAG — Using Knowledge Graphs to Solve Multi-Hop Reasoning https://dev.to/wonderlab/rag-series-16-graph-rag-using-knowledge-graphs-to-solve-multi-hop-reasoning-1o64
+
+# Golden Queries for a Canadian Financial Knowledge Graph
+
+## Showcase Queries for Multi-Hop Reasoning
+
+**Context:** Daily knowledge graph for a CEO of a Canadian financial institution, integrating macroeconomic, microeconomic, geopolitical, and financial signals.
+
+**Today's date:** August 27, 2026
+
+---
+
+## What Makes a Query "Golden"
+
+A golden query demonstrates that the knowledge graph delivers value impossible to obtain from siloed data sources or simple lookups. The criteria:
+
+1. **Cross-domain traversal** — the answer requires connecting signals from at least two of the four domains (macro, micro, geopolitical, financials) that live in separate systems.
+2. **Hidden relationship discovery** — the graph surfaces indirect connections (shared suppliers, ownership chains, cascading exposures) that no single dashboard shows.
+3. **Explainable reasoning path** — each hop is traceable, auditable, and citeable to source data, satisfying regulatory and governance expectations.
+4. **Temporal chaining** — cause-and-effect relationships unfold over time (policy change → market reaction → balance sheet impact → capital requirement).
+5. **Board-level relevance** — the answer maps directly to a decision the CEO or board would actually make (capital allocation, risk appetite, competitive positioning).
+
+---
+
+## Golden Query 1: Tariff Cascade to Credit Loss Provisions
+
+**CEO Question:**
+*"If the US imposes additional tariffs on Canadian steel and aluminum, which of our corporate loan exposures are most vulnerable, and what is the downstream impact on our Q3 provision for credit losses?"*
+
+### Multi-Hop Reasoning Path
+
+```
+US Tariff Policy Change (geopolitical)
+    │
+    ├─[affects]→ Canadian Steel & Aluminum Sector
+    │
+    ├─[contains]→ Company A (steel producer, ON)
+    ├─[contains]→ Company B (aluminum extruder, QC)
+    ├─[contains]→ Company C (auto parts manufacturer, ON)
+    │
+    ├─[has_exposure]→ Our Loan Book: Company A ($240M facility)
+    ├─[has_exposure]→ Our Loan Book: Company B ($85M revolving credit)
+    ├─[has_exposure]→ Our Loan Book: Company C ($410M term loan)
+    │
+    ├─[feeds_into]→ Sector Concentration Ratio: 2.8% of total corporate book
+    │
+    └─[impacts]→ Expected Credit Loss (ECL) model → Q3 PCL forecast
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Geopolitical | Links tariff event to affected HS/NAICS sectors |
+| 2 | Microeconomic | Resolves sectors to specific borrower entities |
+| 3 | Financial | Maps borrowers to our loan exposures and facility types |
+| 4 | Financial | Aggregates to concentration and ECL/provisioning impact |
+
+**Why it's golden:** No single system contains the tariff announcement, the borrower-level sector mapping, the facility-level exposure, and the provisioning model. The graph connects them. A CEO asking this in a traditional setup would get three separate reports from trade compliance, credit risk, and finance — each incomplete without the others.
+
+**Source signals:** US trade policy feeds, Statistics Canada industry classifications, internal loan book, IFRS 9 ECL models.
+
+---
+
+## Golden Query 2: Geopolitical Conflict to Counterparty Risk
+
+**CEO Question:**
+*"How does the Iran/Middle East conflict affect our energy sector counterparties through oil price volatility, and which of them face covenant breaches if WTI drops below $55?"*
+
+### Multi-Hop Reasoning Path
+
+```
+Iran/Middle East Conflict (geopolitical event)
+    │
+    ├─[disrupts]→ Global Oil Supply → WTI/Brent Price Shock
+    │
+    ├─[price_up]→ Canadian Energy Producers (beneficiaries)
+    │   ├─[has_exposure]→ Counterparty X (oil sands, AB) — covenant: debt/EBITDA < 4.0x
+    │   └─[currently_at]→ 3.7x → SAFE if prices rise, but...
+    │
+    ├─[price_down_scenario]→ If WTI < $55 (sustained 2 quarters)
+    │   ├─[revenue_drop]→ Counterparty X revenue falls 22%
+    │   ├─[debt_service]→ DSCR falls below 1.1x
+    │   └─[covenant_breach]→ Financial covenant breach triggered
+    │
+    ├─[price_up]→ Canadian Refiners & Consumers (negatively affected)
+    │   ├─[has_exposure]→ Counterparty Y (refining margin compression)
+    │   └─[margin_impact]→ Gross refining margin -15%
+    │
+    └─[aggregates]→ Total energy sector counterparty risk: $1.2B exposure
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Geopolitical | Links conflict event to commodity supply disruption |
+| 2 | Macro | Maps supply disruption to price scenarios (up/down) |
+| 3 | Micro | Connects price scenarios to specific counterparties with covenant terms |
+| 4 | Financial | Calculates covenant breach probability and aggregate exposure |
+
+**Why it's golden:** The graph holds both directions of the oil price impact — producers benefit, refiners suffer. It surfaces the counterintuitive finding that a price *increase* from geopolitical conflict can still trigger covenant issues for certain counterparties (e.g., refining margin compression), while a price *decrease* hurts producers. This bidirectional reasoning is invisible to linear reporting.
+
+**Source signals:** Geopolitical event feeds, commodity price data, counterparty financials, loan covenant databases.
+
+---
+
+## Golden Query 3: Rate Decision to Capital Buffer Impact
+
+**CEO Question:**
+*"If the Bank of Canada holds the policy rate, how does that flow through to our commercial real estate exposure, developer loan stress, and ultimately our OSFI Domestic Stability Buffer position?"*
+
+### Multi-Hop Reasoning Path
+
+```
+BoC Policy Rate Hold at current level (macroeconomic)
+    │
+    ├─[maintains]→ Mortgage Rates (sticky at current levels)
+    │
+    ├─[suppresses]→ Housing Transaction Volume → New Build Starts
+    │
+    ├─[stresses]→ Real Estate Developers (interim financing rollover)
+    │   ├─[has_exposure]→ Our Developer Loan Book: $X billion
+    │   ├─[concentration]→ National Bank peer: 4% of book; ours: Y%
+    │   └─[at_risk_facilities]→ $Z million in interim loans maturing Q4
+    │
+    ├─[impacts]→ Commercial Real Estate Valuations
+    │   ├─[collateral_coverage]→ LTV ratios on CRE portfolio
+    │   └─[impairment_risk]→ Properties with LTV > 80%
+    │
+    ├─[flows_to]→ Credit Risk RWA Calculation
+    │   ├─[sector_risk_weight]→ CRE risk-weighted assets increase
+    │   └─[capital_consumption]→ Additional capital required: $N million
+    │
+    └─[positions]→ DSB Buffer Assessment
+        ├─[current_dsb]→ 3.0% (OSFI cut from 3.5% in June 2026)
+        ├─[our_cushion]→ $X billion above minimum
+        └─[scenario]→ Does CRE stress erode the freed $74B industry cushion?
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Macro | Links rate decision to mortgage/housing market dynamics |
+| 2 | Micro | Connects housing stress to specific developer exposures and maturities |
+| 3 | Financial | Maps CRE portfolio to RWA and capital consumption |
+| 4 | Regulatory | Positions result against OSFI DSB requirements and peer benchmarks |
+
+**Why it's golden:** This query traverses four domains in a single reasoning chain — monetary policy → housing market → credit portfolio → regulatory capital. The graph holds the OSFI DSB cut to 3.0% (June 2026, freeing ~$74B industry-wide) as a node, enabling the CEO to ask whether a specific stress scenario eats into that newly freed capacity. This is exactly the kind of cross-domain causal chain that no existing reporting system in a Canadian bank produces end-to-end.
+
+**Source signals:** Bank of Canada MPR and rate decisions, Statistics Canada housing data, internal CRE/developer loan book, OSFI CAR Guidelines and DSB announcements.
+
+---
+
+## Golden Query 4: Regulatory Change to Competitive Position
+
+**CEO Question:**
+*"OSFI cut the Domestic Stability Buffer from 3.5% to 3.0%, freeing ~$74B across the Big Six. How does this change our lending capacity relative to our peers, and where should we deploy it for maximum competitive advantage?"*
+
+### Multi-Hop Reasoning Path
+
+```
+OSFI DSB Cut: 3.5% → 3.0% (regulatory event, June 19, 2026)
+    │
+    ├─[frees]→ Capital: ~$74B industry-wide; $X billion for us
+    │
+    ├─[expands]→ Risk-Weighted Asset Capacity: ~$673B industry-wide
+    │
+    ├─[peer_comparison]→ Big Six D-SIBs
+    │   ├─[RY]→ Royal Bank: freed capital, current CET1, growth strategy
+    │   ├─[TD]→ TD Bank: freed capital, current CET1, AML remediation overhang
+    │   ├─[BMO]→ BMO: freed capital, US expansion trajectory
+    │   ├─[BNS]→ Scotiabank: freed capital, Latin America pivot
+    │   ├─[CM]→ CIBC: freed capital, US CRE exposure
+    │   └─[NA]→ National Bank: freed capital, developer loan concentration (4%)
+    │
+    ├─[our_position]→ Our CET1 ratio, growth constraints, strategic priorities
+    │
+    ├─[deployment_options]→
+    │   ├─[option_1]→ Increase corporate lending in underserved sectors
+    │   ├─[option_2]→ AI/technology investment (government signaled priority)
+    │   ├─[option_3]→ Resource sector financing (government signaled priority)
+    │   ├─[option_4]→ Share buyback / dividend increase
+    │   └─[option_5]→ M&A activity
+    │
+    └─[optimization]→ Which option maximizes ROE while maintaining DSB compliance?
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Regulatory | Links DSB change to freed capital at institution level |
+| 2 | Financial | Maps freed capital to RWA expansion capacity per peer |
+| 3 | Micro/Competitive | Compares peer strategies, constraints, and growth vectors |
+| 4 | Strategic | Evaluates deployment options against ROE and compliance constraints |
+
+**Why it's golden:** The graph holds peer financials, strategic context (e.g., TD's AML remediation overhang, NA's developer loan concentration), and government policy signals (AI, resources as deployment priorities) as interconnected nodes. The CEO can see not just "we have more capital" but "we have more capital AND Peer X is constrained, AND the government wants it deployed in AI/resources." That triple intersection is the strategic insight.
+
+**Source signals:** OSFI DSB announcements, Big Six quarterly filings, peer strategy disclosures, federal budget priorities.
+
+---
+
+## Golden Query 5: Hidden Supply Chain Concentration
+
+**CEO Question:**
+*"Which industries in our corporate portfolio have the highest hidden concentration risk through shared supply chain dependencies we can't see in sector-level reporting?"*
+
+### Multi-Hop Reasoning Path
+
+```
+Our Corporate Loan Portfolio (all sectors)
+    │
+    ├─[borrower]→ Company A (auto parts, ON) ─[supplied_by]→ Supplier Z (steel, ON)
+    ├─[borrower]→ Company B (construction, QC) ─[supplied_by]→ Supplier Z (steel, ON)
+    ├─[borrower]→ Company C (machinery, AB) ─[supplied_by]→ Supplier Z (steel, ON)
+    │
+    ├─[hidden_concentration]→ Supplier Z is a single point of failure for 3 sectors
+    │   ├─[total_exposure_via_Z]→ $680M across Companies A, B, C
+    │   ├─[apparent_sector_concentration]→ Low (3 different NAICS codes)
+    │   └─[actual_concentration]→ HIGH (shared upstream dependency)
+    │
+    ├─[supplier_risk]→ Supplier Z financial health
+    │   ├─[financials]→ Declining revenue, rising leverage
+    │   ├─[enforcement]→ EPA/Environment Canada flagged
+    │   └─[ownership]→ PE-backed, potential divestiture
+    │
+    └─[cascade_scenario]→ If Supplier Z fails:
+        ├─[Company A]→ Production halt → revenue drop → covenant risk
+        ├─[Company B]→ Material cost spike → margin compression
+        └─[Company C]→ Supply disruption → force majeure → loan restructuring
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Financial | Identifies all borrowers across the portfolio |
+| 2 | Micro | Traces supply chain relationships (borrower → supplier) |
+| 3 | Micro | Detects shared suppliers across apparently diverse sectors |
+| 4 | Financial | Aggregates hidden concentration and models cascade scenarios |
+
+**Why it's golden:** Sector-level reporting shows Company A (auto), Company B (construction), and Company C (machinery) as three separate, well-diversified exposures. The graph reveals they all depend on Supplier Z — a hidden concentration of $680M that no sector-based risk report would flag. This is the quintessential knowledge graph value proposition: finding the relationship that isn't explicitly modeled in your risk taxonomy but emerges from the graph structure.
+
+**Source signals:** Internal loan book, supply chain/procurement databases, supplier financials, regulatory enforcement feeds, corporate ownership registries.
+
+---
+
+## Golden Query 6: Cross-Border Entity Resolution for Sanctions/AML
+
+**CEO Question:**
+*"Are any of our clients indirectly connected to sanctioned entities through ownership chains, joint ventures, or shared beneficial ownership that our standard KYC screening would miss?"*
+
+### Multi-Hop Reasoning Path
+
+```
+Our Client Base (all entities)
+    │
+    ├─[client]→ Entity P (holding company, Bahamas)
+    │   ├─[owns]→ Entity Q (subsidiary, Cayman Islands)
+    │   ├─[owns]→ Entity R (joint venture partner, UAE)
+    │   │
+    │   ├─[Entity R]─[shared_director_with]→ Entity S (shipping company)
+    │   ├─[Entity S]─[beneficial_owner]→ Individual X
+    │   ├─[Individual X]─[also_controls]→ Entity T
+    │   └─[Entity T]─[on_sanctions_list]→ OFAC SDN List (Iran-related)
+    │
+    ├─[standard_kyc_screen]→ Entity P: CLEAR (no direct sanctions match)
+    ├─[graph_traversal]→ Entity P → Q → R → S → Individual X → T → SANCTIONED
+    │
+    └─[finding]→ 6-hop connection from client to sanctioned entity
+        ├─[exposure]→ $45M in facilities to Entity P
+        ├─[regulatory_risk]→ PCMLTFA violation, OSFI scrutiny, reputational risk
+        └─[action]→ File STR, freeze relationship, notify FINTRAC
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Financial | Starts from all client entities |
+| 2 | Corporate | Traverses ownership hierarchies (parent → subsidiary → JV) |
+| 3 | Corporate | Detects shared directors/beneficial owners across entities |
+| 4 | Regulatory | Matches against sanctions lists (OFAC, FINTRAC, OSFI) |
+
+**Why it's golden:** Standard KYC screening checks the client entity name against sanctions lists — and finds nothing. The graph traverses 6 hops through ownership chains, joint ventures, and shared beneficial ownership to discover that Entity P is indirectly controlled by Individual X, who also controls a sanctioned entity. This is the exact use case that OSFI, FINTRAC, and FATF guidance increasingly demands: going beyond name-matching to network-based risk detection. For a CEO, it's the difference between "we passed our compliance audit" and "we found the exposure our competitors missed."
+
+**Source signals:** Client onboarding data, corporate registries (domestic and international), beneficial ownership databases, OFAC/FINTRAC sanctions lists, PEP databases, Panama/Pandora Papers-type leak data.
+
+---
+
+## Golden Query 7: Inflation Transmission to Net Interest Margin
+
+**CEO Question:**
+*"With Canadian inflation above 3% but expected to ease to 2.5% by Q4, how does the inflation path interact with our deposit beta, loan repricing speed, and ultimately our net interest margin trajectory over the next 4 quarters?"*
+
+### Multi-Hop Reasoning Path
+
+```
+Inflation Trajectory (macroeconomic)
+    │
+    ├─[current]→ Headline CPI: ~3.0% (gasoline-driven)
+    ├─[core]→ CPI excluding gasoline: ~2.0%
+    ├─[forecast]→ Easing to ~2.5% H2 2026, 2.0% by early 2027
+    │
+    ├─[influences]→ BoC Policy Rate Path
+    │   ├─[scenario_hold]→ Rate hold → deposit competition intensifies
+    │   ├─[scenario_cut]→ Rate cut → asset repricing faster than liability
+    │   └─[market_pricing]→ Forward curve implies X bps of cuts by Q1 2027
+    │
+    ├─[rate_path]→[deposit_beta]→
+    │   ├─[our_beta]→ 35% (historical), rising to 42% in competitive environment
+    │   ├─[peer_beta]→ Big Six average: 38%
+    │   └─[behavioral_shift]→ Migration from savings → GICs → term deposits
+    │
+    ├─[rate_path]→[loan_repricing]→
+    │   ├─[variable_rate_loans]→ Reprice immediately (60% of book)
+    │   ├─[fixed_rate_loans]→ Reprice at maturity (staggered schedule)
+    │   └─[repricing_gap]→ Asset sensitivity: +$X million per 25bp cut
+    │
+    └─[synthesis]→ NIM Trajectory
+        ├─[Q3_2026]→ +X bps (lagged deposit competition)
+        ├─[Q4_2026]→ Flat (offsetting forces)
+        ├─[Q1_2027]→ -Y bps (rate cuts hit asset side faster)
+        └─[action]→ Hedge program adjustment, deposit pricing strategy
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Macro | Links inflation path to BoC rate scenario probabilities |
+| 2 | Micro | Connects rate scenarios to deposit behavior (beta, product migration) |
+| 3 | Financial | Maps rate path to loan repricing schedule and asset sensitivity |
+| 4 | Financial | Synthesizes into NIM trajectory with quarterly granularity |
+
+**Why it's golden:** NIM is the single most important earnings driver for a Canadian bank CEO, yet its drivers live across macroeconomics (inflation), monetary policy (rate path), behavioral finance (deposit beta), and treasury (repricing gaps). The graph connects the Bank of Canada's July 2026 MPR forecast directly to the institution's own deposit book composition and loan repricing calendar, producing a quarter-by-quarter NIM trajectory with sensitivity to rate scenarios. No existing system produces this end-to-end view in a single query.
+
+**Source signals:** Bank of Canada MPR (July 2026), internal deposit and loan data, ALM/repricing schedules, forward rate curves, peer deposit beta disclosures.
+
+---
+
+## Golden Query 8: ESG/Greenwashing Risk to Portfolio
+
+**CEO Question:**
+*"Which of our clients have made net-zero commitments but whose actual operations, supply chains, or investments contradict those claims — creating greenwashing exposure that could become reputational and regulatory risk for us?"*
+
+### Multi-Hop Reasoning Path
+
+```
+Client Net-Zero Commitments (corporate disclosures)
+    │
+    ├─[client]→ Company D (committed to net-zero by 2040)
+    │   ├─[commitment]→ SBTi-validated target
+    │   ├─[operations]→ Still expanding oil sands production
+    │   ├─[supply_chain]→ Sources from high-emission suppliers
+    │   ├─[investments]→ CapEx directed to fossil fuel expansion
+    │   └─[contradiction_score]→ HIGH — commitment vs. action gap
+    │
+    ├─[our_exposure]→ $320M in sustainability-linked loans to Company D
+    │
+    ├─[regulatory_risk]→
+    │   ├─[CSA]→ Greenwashing guidelines (NI 51-107)
+    │   ├─[competition_bureau]→ Environmental claims enforcement
+    │   └─[investor_litigation]→ Securities class action risk
+    │
+    ├─[reputational_risk]→
+    │   ├─[media_sentiment]→ Negative coverage trend
+    │   ├─[NGO_watchdog]→ Flagged by InfluenceMap
+    │   └─[our_brand]→ Association risk through sustainability-linked financing
+    │
+    └─[cascade]→ If Company D is accused of greenwashing:
+        ├─[loan_terms]→ Sustainability-linked pricing ratchet triggered?
+        ├─[our_reporting]→ Our own ESG reporting accuracy compromised
+        └─[regulatory_scrutiny]→ OSFI climate risk assessment implications
+```
+
+| Hop | Domain | What the graph does |
+|-----|--------|-------------------|
+| 1 | Corporate | Links client ESG commitments to actual operational data |
+| 2 | Micro | Detects contradictions (expansion vs. commitment) via supply chain and CapEx |
+| 3 | Regulatory | Maps contradictions to CSA greenwashing rules and enforcement risk |
+| 4 | Financial | Traces reputational/regulatory cascade back to our loan exposure and reporting |
+
+**Why it's golden:** ESG risk is the newest frontier where knowledge graphs add unique value, because the risk is entirely about the gap between what an entity says and what it does across multiple data dimensions. The graph holds the commitment (disclosure), the operational reality (production data, CapEx), the supply chain emissions, and the regulatory framework as interconnected nodes. It can compute a "contradiction score" that no single ESG rating agency provides, and then trace that contradiction back to the institution's own exposure and reporting obligations.
+
+**Source signals:** Corporate ESG disclosures, SBTi targets, operational/production data, supply chain emissions data, CSA regulatory framework, media sentiment feeds, NGO watchdog databases (InfluenceMap, etc.).
+
+---
+
+## Summary: Golden Query Matrix
+
+| # | Query Name | Domains Traversed | Hops | Key Insight Type |
+|---|-----------|-------------------|------|-----------------|
+| 1 | Tariff → Credit Loss Provisions | Geopolitical → Micro → Financial | 4 | Cascade impact quantification |
+| 2 | Conflict → Counterparty Risk | Geopolitical → Macro → Micro → Financial | 4 | Bidirectional price impact |
+| 3 | Rate Decision → Capital Buffer | Macro → Micro → Financial → Regulatory | 4 | Causal chain to regulatory capital |
+| 4 | Regulatory Change → Competitive Position | Regulatory → Financial → Micro → Strategic | 4 | Peer-aware strategic optimization |
+| 5 | Hidden Supply Chain Concentration | Financial → Micro → Micro → Financial | 4 | Hidden relationship discovery |
+| 6 | Cross-Border Sanctions/AML | Financial → Corporate → Corporate → Regulatory | 6 | Deep entity resolution |
+| 7 | Inflation → NIM Trajectory | Macro → Macro → Micro → Financial | 4 | Behavioral + financial synthesis |
+| 8 | ESG Greenwashing Risk | Corporate → Micro → Regulatory → Financial | 4 | Commitment-action gap detection |
+
+---
+
+## Design Principles for Your Knowledge Graph Schema
+
+To support these golden queries, your ontology should include at minimum:
+
+### Core Entity Types
+- **Events:** Policy changes, geopolitical conflicts, regulatory actions, market shocks
+- **Entities:** Companies, counterparties, individuals, regulators, instruments
+- **Relationships:** Ownership, exposure, supply, sanctions, commitment, pricing
+- **Metrics:** Rates, prices, ratios, covenant terms, capital requirements
+- **Time:** Temporal nodes for forecasts, maturities, and scenario timelines
+
+### Key Relationship Types
+- `affects` / `impacts` / `disrupts` (event → entity)
+- `has_exposure` / `supplied_by` / `owned_by` (entity → entity)
+- `feeds_into` / `flows_to` / `aggregates` (metric → metric)
+- `regulated_by` / `on_sanctions_list` / `committed_to` (entity → framework)
+
+### Standards Alignment
+- **FIBO** (Financial Industry Business Ontology) for financial instrument and entity modeling
+- **OSFI CAR Guideline** and **DSB** definitions for regulatory capital nodes
+- **NAICS/HS codes** for industry classification traversal
+- **IFRS 9** ECL model parameters for credit loss provisioning
+- **OFAC/FINTRAC** sanctions list schemas for AML queries
+
+### Freshness Requirements
+- Macroeconomic signals: Daily (BoC, Statistics Canada, market data)
+- Geopolitical events: Real-time (news feeds, policy announcements)
+- Financial signals: Daily (internal loan book, market prices, peer filings)
+- Regulatory signals: Event-driven (OSFI quarterly releases, CSA updates)
+
+---
+
+*This document serves as the golden query reference for showcasing the knowledge graph's multi-hop reasoning capabilities to the CEO and board. Each query is designed to be runnable against the daily-refreshed graph and to produce an explainable reasoning path from source signal to executive decision.*
+
+
