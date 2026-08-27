@@ -6130,6 +6130,9 @@ OSFI DSB Cut: 3.5% → 3.0% (regulatory event, June 19, 2026)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> f4d3c8c... Update daily.md
 =======
 >>>>>>> f4d3c8c... Update daily.md
 ```
@@ -6324,6 +6327,7 @@ Client Net-Zero Commitments (corporate disclosures)
 ## Design Principles for Your Knowledge Graph Schema
 
 To support these golden queries, your ontology should include at minimum:
+<<<<<<< HEAD
 =======
 
 # ad-hoc, with article bodies, since a date
@@ -6596,6 +6600,8 @@ def main():
             if it.get("body"):
                 print("\n" + it["body"][:1200])
 >>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> f4d3c8c... Update daily.md
 
 ### Core Entity Types
 - **Events:** Policy changes, geopolitical conflicts, regulatory actions, market shocks
@@ -6605,16 +6611,22 @@ def main():
 - **Time:** Temporal nodes for forecasts, maturities, and scenario timelines
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> f4d3c8c... Update daily.md
 ### Key Relationship Types
 - `affects` / `impacts` / `disrupts` (event → entity)
 - `has_exposure` / `supplied_by` / `owned_by` (entity → entity)
 - `feeds_into` / `flows_to` / `aggregates` (metric → metric)
 - `regulated_by` / `on_sanctions_list` / `committed_to` (entity → framework)
+<<<<<<< HEAD
 =======
 if __name__ == "__main__":
     main()
 ```
 >>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> f4d3c8c... Update daily.md
 
 ### Standards Alignment
 - **FIBO** (Financial Industry Business Ontology) for financial instrument and entity modeling
@@ -6630,6 +6642,7 @@ if __name__ == "__main__":
 - Regulatory signals: Event-driven (OSFI quarterly releases, CSA updates)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ---
 <<<<<<< HEAD
 =======
@@ -6639,10 +6652,14 @@ if __name__ == "__main__":
 >>>>>>> 60765dc... Update daily.md
 =======
 >>>>>>> f4d3c8c... Update daily.md
+=======
+---
+>>>>>>> f4d3c8c... Update daily.md
 
 *This document serves as the golden query reference for showcasing the knowledge graph's multi-hop reasoning capabilities to the CEO and board. Each query is designed to be runnable against the daily-refreshed graph and to produce an explainable reasoning path from source signal to executive decision.*
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> 60765dc... Update daily.md
@@ -6709,3 +6726,5 @@ Sources
 >>>>>>> f4d3c8c... Update daily.md
 =======
 >>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> f4d3c8c... Update daily.md
