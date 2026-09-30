@@ -5484,7 +5484,10 @@ You are the Director of Infrastructure for the City of Ottawa. Provide a daily f
 Would you like me to also generate **persona prompt variants** for different *summary tones* (e.g., “executive concise”, “operational detailed”, “strategic overview”) next?
 That would allow LLMs to tailor summaries for different contexts (e.g., quick read vs. full analysis).
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
 
 Yes — you can pull GZERO Media programmatically, both on a cron schedule and ad-hoc. The site has no public RSS feed, but it exposes Google-News sitemaps and its `robots.txt` permits crawling everything except `/core/*`, `/r/*`, `/mnt/*`, and sponsored-post slugs — so a sitemap-driven scraper is the cleanest, most stable approach.[1]
 
@@ -5515,6 +5518,10 @@ I wrote a runnable `gzero_pull.py` (attached as a file) that does exactly this. 
 ```bash
 # ad-hoc, sitemap metadata only (fast)
 python gzero_pull.py --sections news,hard-numbers --no-fetch
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
 
 # ad-hoc, with article bodies, since a date
 python gzero_pull.py --since 2026-08-01 --json out.json
@@ -5852,8 +5859,11 @@ Sources
 [34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
 [35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 60765dc... Update daily.md
 =======
+=======
+>>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
 
 
 
@@ -6325,6 +6335,280 @@ Client Net-Zero Commitments (corporate disclosures)
 
 To support these golden queries, your ontology should include at minimum:
 
+# ad-hoc, with article bodies, since a date
+python gzero_pull.py --since 2026-08-01 --json out.json
+
+# cron — daily 07:00, archive by date
+0 7 * * * /usr/bin/python3 /path/to/gzero_pull.py --json /var/gzero/$(date +\%F).json
+```
+
+```
+#!/usr/bin/env python3
+"""
+gzero_pull.py — Pull GZERO Media sections (news, analysis, what we're watching,
+graphic truth, by Ian Bremmer, hard numbers) on a schedule or ad-hoc.
+
+USAGE
+  python gzero_pull.py                  # one-shot pull, print to stdout
+  python gzero_pull.py --json out.json   # write JSON
+  python gzero_pull.py --since 2026-08-01
+  python gzero_pull.py --sections news,hard-numbers
+  cron:  0 7 * * *  /usr/bin/python3 /path/to/gzero_pull.py --json /var/gzero/$(date +\%F).json
+
+STRATEGY
+  GZERO Media has no public RSS feed. robots.txt allows crawling everything
+  except /core/*, /r/*, /mnt/* and sponsored-post slugs. The site exposes
+  Google-News sitemaps (sitemap_news.xml, sitemap.xml, sitemap_sections.xml,
+  sitemap_tags.xml) which are the cheapest, most stable machine-readable source.
+  This script:
+    1. Reads sitemap_news.xml (most-recent items, includes <news:publication_date>).
+    2. Falls back to sitemap.xml if the news sitemap is empty/missing.
+    3. Filters by section slug prefix and optional --since date.
+    4. Optionally fetches each article page and extracts <title>, <meta name=description>,
+       Open Graph tags, and the first <article> body text.
+    5. Emits a list of dicts (JSON or pretty-printed).
+
+  Run with --no-fetch to skip article body fetching (fast, sitemap-only).
+
+DEPENDENCIES
+  pip install requests beautifulsoup4 lxml
+  (requests + bs4 are used only for convenience; stdlib urllib + html.parser
+   fallbacks are included so the script still runs without them.)
+"""
+
+from __future__ import annotations
+import argparse, json, sys, re, datetime, gzip, io, ssl
+from urllib.parse import urljoin, urlparse
+from html.parser import HTMLParser
+from xml.etree import ElementTree as ET
+
+try:
+    import requests
+    HAVE_REQUESTS = True
+except ImportError:
+    HAVE_REQUESTS = False
+
+try:
+    from bs4 import BeautifulSoup
+    HAVE_BS4 = True
+except ImportError:
+    HAVE_BS4 = False
+
+
+BASE = "https://www.gzeromedia.com"
+SITEMAPS = [
+    f"{BASE}/sitemap_news.xml",   # Google News sitemap (freshest)
+    f"{BASE}/sitemap.xml",        # full URL set
+    f"{BASE}/sitemap_sections.xml",
+]
+NS = {
+    "sm": "http://www.sitemaps.org/schemas/sitemap/0.9",
+    "news": "http://www.google.com/schemas/sitemap-news/0.9",
+}
+
+# Section slug prefixes — match these against <loc> paths.
+# Derived from observed site structure (gzeromedia.com/news/...,
+# /news/watching/, /news/hard-numbers/, /graphic-truth/, /by-ian-bremmer/, ...).
+SECTION_MAP = {
+    "news":              ["/news/"],
+    "analysis":          ["/news/analysis/", "/analysis/"],
+    "what-were-watching":["/news/watching/", "/what-were-watching"],
+    "graphic-truth":     ["/graphic-truth/", "/tag/graphic-truth", "/tag/the-graphic-truth"],
+    "by-ian-bremmer":    ["/by-ian-bremmer/", "/u/ianbremmer"],
+    "hard-numbers":      ["/news/hard-numbers/", "/tag/hard-numbers", "/hard-numbers"],
+}
+ALL_SECTIONS = list(SECTION_MAP.keys())
+
+
+def http_get(url: str, timeout: int = 30) -> str:
+    """GET with a desktop UA, gzip handling, stdlib fallback."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip",
+    }
+    if HAVE_REQUESTS:
+        r = requests.get(url, headers=headers, timeout=timeout)
+        r.raise_for_status()
+        return r.text
+    # stdlib fallback
+    import urllib.request
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, context=ctx, timeout=timeout) as r:
+        data = r.read()
+        if r.headers.get("Content-Encoding") == "gzip":
+            data = gzip.decompress(data)
+        return data.decode(r.headers.get_content_charset() or "utf-8", "replace")
+
+
+def parse_sitemap(url: str) -> list[dict]:
+    """Return list of {loc, lastmod, news_date, title} from a sitemap."""
+    try:
+        xml = http_get(url)
+    except Exception as e:
+        print(f"  ! sitemap {url}: {e}", file=sys.stderr)
+        return []
+    root = ET.fromstring(xml)
+    out = []
+    for url_el in root.findall("sm:url", NS):
+        loc = (url_el.findtext("sm:loc", default="", namespaces=NS) or "").strip()
+        if not loc:
+            continue
+        lastmod = (url_el.findtext("sm:lastmod", default="", namespaces=NS) or "").strip()
+        news_el = url_el.find("news:news", NS)
+        news_date = ""
+        news_title = ""
+        if news_el is not None:
+            news_date = (news_el.findtext("news:publication_date", default="", namespaces=NS) or "").strip()
+            news_title = (news_el.findtext("news:title", default="", namespaces=NS) or "").strip()
+        out.append({"loc": loc, "lastmod": lastmod,
+                    "news_date": news_date, "title": news_title})
+    return out
+
+
+def match_section(loc: str, prefixes: list[str]) -> bool:
+    path = urlparse(loc).path
+    return any(path.startswith(p) or p in path for p in prefixes)
+
+
+def filter_items(items: list[dict], sections: list[str], since: datetime.date | None):
+    keep = []
+    for it in items:
+        path = urlparse(it["loc"]).path
+        if sections and sections != ALL_SECTIONS:
+            if not any(match_section(it["loc"], SECTION_MAP[s]) for s in sections):
+                continue
+        date_str = it.get("news_date") or it.get("lastmod") or ""
+        d = None
+        if date_str:
+            try:
+                d = datetime.date.fromisoformat(date_str[:10])
+            except ValueError:
+                d = None
+        if since and d and d < since:
+            continue
+        it["section"] = next((s for s in sections if match_section(it["loc"], SECTION_MAP[s])), "other")
+        it["date"] = d.isoformat() if d else ""
+        keep.append(it)
+    return keep
+
+
+class _MetaParser(HTMLParser):
+    """Minimal stdlib extractor for <title>, meta description, og:*."""
+    def __init__(self):
+        super().__init__()
+        self.title = ""
+        self.meta = {}
+        self._in_title = False
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "title":
+            self._in_title = True
+        elif tag == "meta":
+            name = a.get("name") or a.get("property") or ""
+            if name:
+                self.meta[name.lower()] = a.get("content", "")
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self._in_title = False
+    def handle_data(self, data):
+        if self._in_title:
+            self.title += data
+
+
+def extract_article(loc: str) -> dict:
+    """Fetch one article page and pull out metadata + first paragraph(s)."""
+    try:
+        html = http_get(loc)
+    except Exception as e:
+        return {"error": str(e)}
+    if HAVE_BS4:
+        soup = BeautifulSoup(html, "lxml")
+        title = soup.title.string.strip() if soup.title and soup.title.string else ""
+        desc = (soup.find("meta", attrs={"name": "description"}) or {}).get("content", "")
+        og = {m.get("property", "").lower(): m.get("content", "")
+              for m in soup.find_all("meta") if m.get("property", "").startswith("og:")}
+        art = soup.find("article") or soup.find("main") or soup.body
+        paras = [p.get_text(" ", strip=True) for p in art.find_all("p")] if art else []
+        body = "\n\n".join(p for p in paras if len(p) > 40)[:4000]
+        return {"title": title, "description": desc, "og": og, "body": body}
+    # stdlib fallback
+    p = _MetaParser()
+    p.feed(html)
+    desc = p.meta.get("description", "")
+    og = {k: v for k, v in p.meta.items() if k.startswith("og:")}
+    # crude body extraction: first <p>...</p> blocks
+    paras = re.findall(r"<p[^>]*>(.*?)</p>", html, re.S)
+    body = "\n\n".join(re.sub(r"<[^>]+>", "", x).strip() for x in paras if len(x) > 80)[:4000]
+    return {"title": p.title, "description": desc, "og": og, "body": body}
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Pull GZERO Media sections.")
+    ap.add_argument("--sections", default=",".join(ALL_SECTIONS),
+                    help="comma list: " + ",".join(ALL_SECTIONS))
+    ap.add_argument("--since", help="YYYY-MM-DD; only items on/after this date")
+    ap.add_argument("--json", metavar="FILE", help="write JSON to FILE")
+    ap.add_argument("--no-fetch", action="store_true",
+                    help="skip article body fetching (sitemap metadata only)")
+    ap.add_argument("--limit", type=int, default=0, help="cap number of items")
+    args = ap.parse_args()
+
+    sections = [s.strip() for s in args.sections.split(",") if s.strip() in ALL_SECTIONS] or ALL_SECTIONS
+    since = datetime.date.fromisoformat(args.since) if args.since else None
+
+    print(f"# GZERO pull — sections={sections} since={since} fetch={'no' if args.no_fetch else 'yes'}",
+          file=sys.stderr)
+
+    # 1. gather URLs from sitemaps (dedup, freshest first)
+    seen, items = set(), []
+    for sm in SITEMAPS:
+        got = parse_sitemap(sm)
+        print(f"  sitemap {sm}: {len(got)} urls", file=sys.stderr)
+        for it in got:
+            if it["loc"] in seen:
+                continue
+            seen.add(it["loc"])
+            items.append(it)
+        if items:
+            break  # news sitemap is enough; fall through only if empty
+
+    items.sort(key=lambda x: x.get("news_date") or x.get("lastmod") or "", reverse=True)
+    items = filter_items(items, sections, since)
+    if args.limit:
+        items = items[: args.limit]
+    print(f"  matched {len(items)} items", file=sys.stderr)
+
+    # 2. optionally fetch each article body
+    if not args.no_fetch:
+        for i, it in enumerate(items, 1):
+            print(f"  [{i}/{len(items)}] {it['loc']}", file=sys.stderr)
+            it.update(extract_article(it["loc"]))
+
+    # 3. emit
+    if args.json:
+        with open(args.json, "w", encoding="utf-8") as f:
+            json.dump(items, f, ensure_ascii=False, indent=2)
+        print(f"  wrote {args.json}", file=sys.stderr)
+    else:
+        for it in items:
+            print(f"\n--- {it.get('section')} | {it.get('date')} ---")
+            print(f"URL:   {it['loc']}")
+            print(f"Title: {it.get('title') or it.get('og',{}).get('og:title','')}")
+            desc = it.get("description") or it.get("og",{}).get("og:description","")
+            if desc:
+                print(f"Desc:  {desc}")
+            if it.get("body"):
+                print("\n" + it["body"][:1200])
+>>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> f4d3c8c... Update daily.md
+>>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
+
 ### Core Entity Types
 - **Events:** Policy changes, geopolitical conflicts, regulatory actions, market shocks
 - **Entities:** Companies, counterparties, individuals, regulators, instruments
@@ -6337,6 +6621,17 @@ To support these golden queries, your ontology should include at minimum:
 - `has_exposure` / `supplied_by` / `owned_by` (entity → entity)
 - `feeds_into` / `flows_to` / `aggregates` (metric → metric)
 - `regulated_by` / `on_sanctions_list` / `committed_to` (entity → framework)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+if __name__ == "__main__":
+    main()
+```
+>>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> f4d3c8c... Update daily.md
+>>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
 
 ### Standards Alignment
 - **FIBO** (Financial Industry Business Ontology) for financial instrument and entity modeling
@@ -6351,9 +6646,90 @@ To support these golden queries, your ontology should include at minimum:
 - Financial signals: Daily (internal loan book, market prices, peer filings)
 - Regulatory signals: Event-driven (OSFI quarterly releases, CSA updates)
 
+<<<<<<< HEAD
 ---
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+---
+<<<<<<< HEAD
+=======
+if __name__ == "__main__":
+    main()
+```
+>>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> f4d3c8c... Update daily.md
+=======
+---
+>>>>>>> f4d3c8c... Update daily.md
+>>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
 
 *This document serves as the golden query reference for showcasing the knowledge graph's multi-hop reasoning capabilities to the CEO and board. Each query is designed to be runnable against the daily-refreshed graph and to produce an explainable reasoning path from source signal to executive decision.*
 
+The script:
+- Deduplicates across sitemaps, sorts newest-first
+- Filters by `--sections` (comma list) and `--since YYYY-MM-DD`
+- `--no-fetch` skips article body extraction (sitemap metadata only, fast)
+- `--limit N` caps the item count
+- Writes JSON or prints to stdout
 
+## Cron vs. ad-hoc
+
+- **Cron**: GZERO publishes daily (GZERO Daily every weekday at 12 ET, Ian Bremmer's weekly column Wednesdays at 4 ET). A daily 07:00 ET cron with `--since $(date -d yesterday +%F)` captures everything new since the last run. The news sitemap updates as articles go live, so you won't miss same-day posts.[2][3]
+- **Ad-hoc**: Run the same script without `--since` for a full pull, or with a specific date range. The sitemap-only mode (`--no-fetch`) is cheap enough to run interactively anytime.
+
+## Caveats worth knowing
+
+- **No RSS**: GZERO's only syndicated feed is the podcast (`feeds.simplecast.com/ibBxsiVV`). Articles have no RSS; the sitemap is the next-best structured source.[4]
+- **Sitemap stability**: Sitemaps can lag by minutes to hours after publication. If you need real-time, pair the sitemap pull with a homepage/section-page HTML scrape as a secondary signal.
+- **JavaScript-rendered content**: Some section pages ("Popular", "Recent", "Load More") are client-rendered. The sitemap avoids this entirely — it lists every published URL regardless of how the page renders it.
+- **Rate limiting**: Be polite. The script makes one request per sitemap plus one per article body. If you fetch bodies, add a `time.sleep(1)` between article requests, or use `--no-fetch` for the cron and fetch bodies only on ad-hoc deep dives.
+- **Terms**: `robots.txt` permits this; GZERO's terms of service may restrict republication. Pulling for personal/internal use is fine; redistributing full article text would need permission.
+
+If you want, I can wire this into a specific destination — push results to a Notion database, post a Slack digest, or save to S3 — using the connectors available. Just say where you want the output to land.
+
+Sources
+[1] https://www.gzeromedia.com/robots.txt https://www.gzeromedia.com/robots.txt
+[2] Eurasia Group | GZERO Media to launch a weekly edition by Ian Bremmer of the rebranded GZERO Daily newsletter https://www.eurasiagroup.net/media/gzero-media-to-launch-a-weekly-edition-by-ian-bremmer-of-the-rebranded-gzero-daily-newsletter
+[3] Sign up for GZERO's newsletters https://www.gzeromedia.com/subscribe/
+[4] GZERO World with Ian Bremmer - Simplecast https://feeds.simplecast.com/ibBxsiVV
+[5] GZERO Media: Global politics, world news and analysis https://www.gzeromedia.com/
+[6] GZERO's news and analysis about global politics https://www.gzeromedia.com/news/
+[7] GZERO World with Ian Bremmer - Podnews https://podnews.net/podcast/i4rjy
+[8] Analysis https://www.gzeromedia.com/news/analysis/
+[9] GZERO Daily https://www.gzeromedia.com/u/gzerodaily
+[10] By Ian Bremmer https://www.gzeromedia.com/by-ian-bremmer/
+[11] Partnering with GZERO Media: Download our Media Kit https://www.gzeromedia.com/media-kit
+[12] Podcasts https://www.gzeromedia.com/podcast/
+[13] GZERO Media (@gzeromedia) / Posts ... https://x.com/gzeromedia
+[14] Free Web Scraping Tool – Scrape Any Website Online | OpenGraph.io https://www.opengraph.io/web-scraping-tool
+[15] Free URL Extractor — Extract All Links from Any Website ... https://simplescraper.io/extracturls
+[16] Google News Sitemaps https://www.google.com/schemas/sitemap-news/0.9/
+[17] Announcing GZERO Daily and Ian Bremmer's new weekly newsletter https://www.gzeromedia.com/by-ian-bremmer/announcing-gzero-daily-and-ian-bremmers-new-weekly-newsletter
+[18] Thanks for subscribing to ... https://www.gzeromedia.com/subscribe/thanks-for-subscribing-to-gzeros-newsletters
+[19] Ian Bremmer - GZERO Media https://www.gzeromedia.com/u/ianbremmer
+[20] gzero daily newsletter news - GZERO Media https://www.gzeromedia.com/tag/gzero-daily-newsletter
+[21] Graphic Truth | Infographics https://www.gzeromedia.com/graphic-truth/
+[22] Russia seeks state-owned WhatsApp alternative, Argentina ... https://www.gzeromedia.com/news/watching/what-were-watching-russia-seeks-state-owned-whatsapp-alternative-argentina-advances-mileis-labor-reforms-mixed-messages-on-el-paso-airport-closure
+[23] Honduras' new leader takes office, Trump threatens Iran ... https://www.gzeromedia.com/news/watching/what-were-watching-honduras-new-leader-takes-office-trump-threatens-iran-again-winter-olympics-to-get-ice-y
+[24] Graphic Truth news https://www.gzeromedia.com/tag/graphic-truth
+[25] What We're Watching & What We're Ignoring https://www.gzeromedia.com/what-were-watching-what-were-ignoring-2629708830
+[26] Graphic Truth: Is government making peoples' lives worse? https://www.gzeromedia.com/graphic-truth-how-policies-will-impact-future-generations
+[27] Can Trump's executive order lower drug prices? https://www.gzeromedia.com/graphic-truth/1-story-3-numbers-can-trump-s-executive-order-lower-drug-prices
+[28] What We're Watching - GZERO Media https://www.gzeromedia.com/news/watching/
+[29] Hard Numbers: Israel arrests violent settlers, US House ... https://www.gzeromedia.com/news/hard-numbers/hard-numbers-israel-arrests-violent-settlers-us-house-ends-extended-recess-botswana-seeks-majority-de-beers-more
+[30] Spain-Gibraltar border comes crashing down, US and Iran ... https://www.gzeromedia.com/news/watching/spain-gibraltar-border-comes-crashing-down-us-and-iran-enter-shaky-equilibrium-mexicos-sheinbaum-finally-challenges-an-ice-killing
+[31] Modi's election triumph, US-Swiss tariff deal, Assad ally captured https://www.gzeromedia.com/news/hard-numbers/indias-modi-has-excellent-election-day-us-agrees-to-cut-swiss-tariffs-12-year-manhunt-for-assad-ally-ends
+[32] What We’re Watching: Iran threatens another waterway, & More https://www.gzeromedia.com/news/watching/iran-threatens-another-waterway-guyana-sees-economic-boom-imf-warns-of-economic-impact-from-middle-east-conflict
+[33] Four numbers you need to know today https://www.gzeromedia.com/news/hard-numbers/hard-numbers-gunfight-on-cubas-shores-thousands-die-taking-perilous-migration-routes-hong-kong-democracy-activist-wins-one-appeal-greenland-spat-boosts-danish-incumbents
+[34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
+[35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
+<<<<<<< HEAD
+=======
+>>>>>>> f4d3c8c... Update daily.md
+=======
+>>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
 >>>>>>> f4d3c8c... Update daily.md
