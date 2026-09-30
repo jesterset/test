@@ -6657,14 +6657,6 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     main()
 ```
->>>>>>> 60765dc... Update daily.md
-=======
->>>>>>> f4d3c8c... Update daily.md
-=======
----
->>>>>>> f4d3c8c... Update daily.md
->>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
-
 *This document serves as the golden query reference for showcasing the knowledge graph's multi-hop reasoning capabilities to the CEO and board. Each query is designed to be runnable against the daily-refreshed graph and to produce an explainable reasoning path from source signal to executive decision.*
 
 The script:
@@ -6725,11 +6717,3 @@ Sources
 [33] Four numbers you need to know today https://www.gzeromedia.com/news/hard-numbers/hard-numbers-gunfight-on-cubas-shores-thousands-die-taking-perilous-migration-routes-hong-kong-democracy-activist-wins-one-appeal-greenland-spat-boosts-danish-incumbents
 [34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
 [35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
-<<<<<<< HEAD
-=======
->>>>>>> f4d3c8c... Update daily.md
-=======
->>>>>>> 60765dc... Update daily.md
-=======
->>>>>>> 2a9287e02fe2170620e904939c1a2ed3b8bddb35
->>>>>>> f4d3c8c... Update daily.md
