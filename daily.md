@@ -6128,6 +6128,9 @@ OSFI DSB Cut: 3.5% → 3.0% (regulatory event, June 19, 2026)
 ### Multi-Hop Reasoning Path
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> f4d3c8c... Update daily.md
 ```
 Our Corporate Loan Portfolio (all sectors)
     │
@@ -6348,15 +6351,19 @@ To support these golden queries, your ontology should include at minimum:
 - Regulatory signals: Event-driven (OSFI quarterly releases, CSA updates)
 
 ---
+<<<<<<< HEAD
 =======
 if __name__ == "__main__":
     main()
 ```
 >>>>>>> 60765dc... Update daily.md
+=======
+>>>>>>> f4d3c8c... Update daily.md
 
 *This document serves as the golden query reference for showcasing the knowledge graph's multi-hop reasoning capabilities to the CEO and board. Each query is designed to be runnable against the daily-refreshed graph and to produce an explainable reasoning path from source signal to executive decision.*
 
 
+<<<<<<< HEAD
 The script:
 - Deduplicates across sitemaps, sorts newest-first
 - Filters by `--sections` (comma list) and `--since YYYY-MM-DD`
@@ -6415,3 +6422,5 @@ Sources
 [33] Four numbers you need to know today https://www.gzeromedia.com/news/hard-numbers/hard-numbers-gunfight-on-cubas-shores-thousands-die-taking-perilous-migration-routes-hong-kong-democracy-activist-wins-one-appeal-greenland-spat-boosts-danish-incumbents
 [34] The Graphic Truth news - GZERO Media https://www.gzeromedia.com/tag/the-graphic-truth
 [35] Graphic Truth: A world thirsty for peace https://www.gzeromedia.com/graphic-truth/graphic-truth-a-world-thirsty-for-peace
+=======
+>>>>>>> f4d3c8c... Update daily.md
